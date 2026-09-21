@@ -1,0 +1,289 @@
+:host {
+  display: block;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  position: relative;
+  /* Airplane soaring over sunset clouds */
+  background: 
+    linear-gradient(rgba(4, 15, 30, 0.60), rgba(4, 15, 30, 0.75)),
+    url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1920&q=80') no-repeat center center;
+  background-size: cover;
+  background-attachment: fixed;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Glassmorphism Panel */
+.login-panel {
+  width: min(100%, 440px);
+  display: grid;
+  gap: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 16px;
+  padding: 34px;
+  background: rgb(47 45 45 / 12%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 24px 70px rgba(66, 64, 64, 0.5);
+  color: #ffffff;
+}
+
+.brand-block {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-mark {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0e82ff, #0046c7);
+  font-size: 26px;
+  box-shadow: 0 6px 15px rgba(14, 130, 255, 0.35);
+}
+
+.brand-mark i {
+  transform: rotate(-42deg);
+}
+
+.brand-block div:last-child {
+  display: grid;
+  gap: 3px;
+}
+
+.brand-block strong {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 850;
+  letter-spacing: 0.5px;
+}
+
+.brand-block span,
+.login-copy span,
+.login-form label > span,
+.login-hint span {
+  color: #90cdf4;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.login-copy h1 {
+  margin: 4px 0 6px;
+  color: #ffffff;
+  font-size: 30px;
+  font-weight: 850;
+}
+
+.login-copy p {
+  margin: 6px 0 0;
+  color: #e2e8f0;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.login-form {
+  display: grid;
+  gap: 16px;
+}
+
+.login-form label {
+  display: grid;
+  gap: 7px;
+}
+
+.login-form label div {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  padding: 0 14px;
+  background: rgba(0, 0, 0, 0.25);
+  color: #90cdf4;
+  transition: all 0.2s ease;
+}
+
+.login-form label div:focus-within {
+  border-color: #3b82f6;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.login-form input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  color: #ffffff;
+  background: transparent;
+  font-size: 14.5px;
+  font-weight: 500;
+}
+
+.login-form input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Prevent browser autofill from turning inputs white */
+.login-form input:-webkit-autofill,
+.login-form input:-webkit-autofill:hover,
+.login-form input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff;
+  -webkit-box-shadow: 0 0 0 1000px rgba(15, 23, 42, 0.55) inset;
+  box-shadow: 0 0 0 1000px rgba(15, 23, 42, 0.55) inset;
+  transition: background-color 9999s ease-in-out 0s;
+  caret-color: #ffffff;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -4px;
+}
+
+.forgot-link {
+  color: #90cdf4;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.forgot-link:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.error-message {
+  margin: 0;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #fee2e2;
+  background: rgba(153, 27, 27, 0.6);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.success-message {
+  margin: 0;
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #d1fae5;
+  background: rgba(6, 95, 70, 0.6);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.login-form button {
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 8px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0e82ff, #0046c7);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(14, 130, 255, 0.35);
+  transition: all 0.2s ease;
+}
+
+.login-form button:hover {
+  background: linear-gradient(135deg, #258eff, #0d57e3);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(14, 130, 255, 0.45);
+}
+
+.login-form button.btn-secondary {
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.login-form button.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Replace default browser focus outline with a brand-consistent glow */
+.login-form button:focus {
+  outline: none;
+}
+
+.login-form button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4), 0 10px 25px rgba(14, 130, 255, 0.35);
+}
+
+.login-hint {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding-top: 18px;
+}
+
+.login-hint strong {
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ---------- OTP verification boxes ---------- */
+.otp-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.login-form input.otp-box {
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 56px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255, 255, 255, 0.35) !important;
+  background: rgba(0, 0, 0, 0.3) !important;
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-form input.otp-box:focus {
+  border-color: #3b82f6 !important;
+  background: rgba(0, 0, 0, 0.45) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.login-form input.otp-box:not(:placeholder-shown) {
+  border-color: rgba(255, 255, 255, 0.55) !important;
+}
+
+.otp-resend {
+  justify-content: flex-end;
+  margin-top: -4px;
+  margin-bottom: 10px;
+}

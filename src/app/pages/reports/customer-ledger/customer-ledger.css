@@ -1,0 +1,608 @@
+/* ============================================================
+   CUSTOMER LEDGER PAGE - Dark Executive Theme (Slate to Teal)
+   Updated to match Customer Invoice/Sales CSS exactly.
+   ============================================================ */
+
+.customer-page-container {
+  padding: 20px 24px;
+  background: linear-gradient(160deg, #0f1420 0%, #16283a 35%, #0f4a44 70%, #0d3b36 100%);
+  min-height: calc(100vh - 60px);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  box-sizing: border-box;
+}
+
+/* ==================== TOP BANNER ==================== */
+.invoice-top-banner {
+  background: linear-gradient(90deg, #131b2e 0%, #1e293b 55%, #0f766e 100%);
+  padding: 20px 24px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border: 0.5px solid #263449;
+}
+
+.banner-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-badge-icon {
+  width: 50px;
+  height: 50px;
+  background: #14b8a6;
+  color: #ffffff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.25);
+}
+
+.sub-category {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.invoice-top-banner h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.banner-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ==================== BUTTONS (POLISHED) ==================== */
+.import-excel-btn {
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+  padding: 10px 16px;
+  border: 0.5px solid #334155;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.import-excel-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #475569;
+  transform: translateY(-1px);
+}
+
+/* Teal "Receive Payment" Button */
+.create-customer-btn {
+  background: #14b8a6 !important; /* Force Teal over inline HTML */
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.create-customer-btn:hover {
+  background: #0d9488 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.35);
+}
+
+/* ==================== FULL WIDTH TABLE ==================== */
+.full-width-table-section {
+  background: #131b2e;
+  border-radius: 12px;
+  border: 0.5px solid #263449;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.table-header-toolbar {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 0.5px solid #263449;
+}
+
+.table-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #e5e9f0;
+}
+
+.result-count {
+  font-size: 12px;
+  font-weight: 400;
+  color: #64748b;
+  background: #1e293b;
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+.search-wrapper {
+  position: relative;
+  width: 200px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+}
+
+.search-input {
+  padding-left: 34px !important;
+  width: 100% !important;
+  border: 0.5px solid #334155 !important;
+  border-radius: 8px !important;
+  padding: 8px 12px 8px 34px !important;
+  outline: none !important;
+  transition: 0.2s ease !important;
+  background: #1e293b !important;
+  color: #e5e9f0 !important;
+}
+
+.search-input:focus {
+  border-color: #14b8a6 !important;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15) !important;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.receipt-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.receipt-table thead {
+  background: #17233a;
+}
+
+.receipt-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #263449;
+}
+
+.receipt-table td {
+  padding: 12px 16px;
+  border-bottom: 0.5px solid #1e293b;
+  font-size: 13px;
+  color: #e5e9f0;
+}
+
+/* ==================== POLISHED TABLE ROWS ==================== */
+.receipt-table tbody tr {
+  transition: all 0.15s ease;
+}
+
+.receipt-table tbody tr:hover {
+  background: #17233a;
+  cursor: pointer;
+}
+
+.receipt-table tbody tr.selected {
+  background: rgba(20, 184, 166, 0.08);
+  border-left: 3px solid #14b8a6;
+}
+
+.receipt-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.receipt-avatar {
+  width: 34px;
+  height: 34px;
+  background: #14b8a6;
+  color: #ffffff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.receipt-name {
+  font-weight: 600;
+  color: #e5e9f0;
+}
+
+/* ==================== ACTION BUTTONS & LINKS ==================== */
+.action-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background: rgba(20, 184, 166, 0.15);
+  color: #14b8a6;
+}
+
+.clickable-invoice {
+  color: #5eead4;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.clickable-invoice:hover {
+  opacity: 0.7;
+}
+
+.btn-action {
+  background: #1e293b;
+  border: 0.5px solid #334155;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-action:hover {
+  background: #253347;
+  border-color: #475569;
+  transform: translateY(-1px);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px !important;
+  color: #64748b;
+}
+
+.empty-state i {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+/* ==================== GRID VIEW ==================== */
+.toolbar-btn {
+  padding: 6px 14px;
+  border: 0.5px solid #334155;
+  border-radius: 6px;
+  background: #1e293b;
+  font-size: 12px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.toolbar-btn:hover {
+  background: #253347;
+  border-color: #475569;
+}
+
+.receipt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  padding: 20px;
+}
+
+.receipt-grid-card {
+  background: #131b2e;
+  border: 0.5px solid #263449;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.receipt-grid-card:hover {
+  border-color: #475569;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  transform: translateY(-2px);
+}
+.receipt-grid-card.selected {
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+}
+
+.grid-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.grid-card-avatar {
+  width: 48px;
+  height: 48px;
+  background: #14b8a6;
+  color: #ffffff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.grid-card-status {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 10px;
+}
+.status-cleared { background: #052e16; color: #4ade80; }
+.status-pending { background: #2a1215; color: #f87171; }
+
+.grid-card-body h4 { margin: 0 0 4px 0; font-size: 15px; color: #e5e9f0; }
+.grid-card-sub { font-size: 12px; color: #64748b; }
+
+.grid-card-details { margin-top: 10px; }
+.grid-card-details p { margin: 4px 0; font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 6px; }
+.grid-card-details i { width: 14px; color: #64748b; }
+
+.empty-state-grid {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  color: #64748b;
+}
+
+/* ==================== HELPERS ==================== */
+.font-bold { font-weight: 700 !important; }
+.text-success { color: #4ade80 !important; }
+.text-danger { color: #f87171 !important; }
+
+/* ==================== DETAIL SECTION ==================== */
+.detail-section {
+  background: #131b2e;
+  border: 0.5px solid #263449;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.detail-section-header {
+  padding: 18px 24px;
+  background: #17233a;
+  border-bottom: 0.5px solid #263449;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-section-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.detail-avatar {
+  width: 44px;
+  height: 44px;
+  background: #14b8a6;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 16px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.detail-section-title h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #e5e9f0;
+}
+
+.detail-section-title p {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.detail-tab-content {
+  padding: 20px 24px;
+  max-height: 500px;
+  overflow-y: auto;
+  background: #131b2e;
+}
+
+.detail-tab-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.detail-tab-content::-webkit-scrollbar-track {
+  background: #1e293b;
+  border-radius: 3px;
+}
+
+.detail-tab-content::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 3px;
+}
+
+/* ==================== BANNER ==================== */
+.voucher-status-banner {
+  background: #17233a;
+  border: 0.5px solid #263449;
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.banner-cleared { background: #052e16; border-color: #14532d; }
+.banner-bounced { background: #2a1215; border-color: #7f1d1d; }
+
+.banner-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  opacity: 0.7;
+  display: block;
+  color: #94a3b8;
+}
+
+.voucher-status-banner h3 {
+  margin: 4px 0 0 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #e5e9f0;
+}
+
+.banner-amount {
+  text-align: right;
+}
+
+.banner-amount h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 4px 0 0 0;
+  color: #e5e9f0;
+}
+
+/* OX / CAPSULE SHAPE AGING BAR */
+.aging-capsule-container {
+  background: transparent;
+  border-radius: 50px;
+  height: 34px;
+  display: flex;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.aging-capsule {
+  flex: 1;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.aging-capsule.green { background: #052e16; color: #4ade80; }
+.aging-capsule.orange { background: #451a03; color: #fbbf24; }
+.aging-capsule.red { background: #2a1215; color: #f87171; flex: 2; font-weight: 700; }
+
+.aging-capsule span {
+  margin-left: 6px;
+  font-weight: 400;
+  background: rgba(255,255,255,0.05);
+  padding: 0 6px;
+  border-radius: 12px;
+  color: #94a3b8;
+}
+
+/* ==================== INFO CARD ==================== */
+.info-card-section {
+  background: #17233a;
+  border: 0.5px solid #263449;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.section-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 0.5px solid #263449;
+  padding-bottom: 10px;
+}
+
+.section-card-title i {
+  color: #14b8a6;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .invoice-top-banner {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+    padding: 16px 20px;
+  }
+  
+  .banner-actions {
+    flex-wrap: wrap;
+  }
+  
+  .table-header-toolbar {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .search-wrapper {
+    width: 100% !important;
+  }
+  
+  .detail-section-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .aging-capsule-container {
+    flex-direction: column;
+    height: auto;
+    border-radius: 12px;
+    gap: 2px;
+  }
+  .aging-capsule {
+    border-radius: 6px;
+    padding: 6px 0;
+  }
+}

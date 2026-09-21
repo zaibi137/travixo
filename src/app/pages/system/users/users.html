@@ -1,0 +1,378 @@
+<!-- src/app/pages/system/users/users.html -->
+
+<div class="customer-page-container">
+  
+  <!-- TOP HEADER BANNER -->
+  <div class="invoice-top-banner">
+    <div class="banner-left">
+      <div class="header-badge-icon">
+        <i class="fa-solid fa-user-gear"></i>
+      </div>
+      <div>
+        <h2>Employee Directory</h2>
+      </div>
+    </div>
+    <div class="banner-actions">
+      <button class="create-customer-btn" type="button" (click)="openCreateModal()">
+        <i class="fa-solid fa-plus"></i> Add New Employee
+      </button>
+    </div>
+  </div>
+
+  <!-- FULL-WIDTH TABLE/GRID SECTION -->
+  <div class="full-width-table-section">
+    <div class="table-container">
+      
+      <!-- Toolbar -->
+      <div class="table-header-toolbar">
+        <div class="table-title">
+          <i class="fa-solid fa-list-ul"></i>
+          <span>Staff Directory</span>
+          <span class="result-count">{{ filteredUsers.length }} records</span>
+        </div>
+        
+        <!-- Right Side: Search + Toggle -->
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <div class="search-wrapper" style="position: relative; width: 250px;">
+            <i class="fa-solid fa-search search-icon" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+            <input
+              type="text"
+              class="search-input"
+              [(ngModel)]="searchQuery"
+              placeholder="Search name, email, or CNIC..."
+              style="padding-left: 34px; width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px 8px 34px; outline: none; transition: 0.2s;"
+            >
+          </div>
+
+          <!-- View Toggle Button -->
+          <button class="toolbar-btn" (click)="toggleView()">
+            <i class="fa-solid" [ngClass]="{'fa-table-cells': isGridView(), 'fa-table': !isGridView()}"></i>
+            {{ isGridView() ? 'Grid View' : 'List View' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- ================== LIST VIEW (Table) ================== -->
+      <div *ngIf="!isGridView()" class="table-responsive">
+        <table class="receipt-table">
+          <thead>
+            <tr>
+              <th style="width: 40px;">#</th>
+              <th>Employee</th>
+              <th>Role</th>
+              <th>Email</th>
+              <th>Last Login</th>
+              <th>Status</th>
+              <th style="width: 80px;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let user of filteredUsers; let i = index"
+              [class.selected]="selectedUser?.id === user.id"
+              (click)="selectUser(user)"
+              style="cursor: pointer;"
+            >
+              <td>{{ i + 1 }}</td>
+              <td>
+                <div class="receipt-cell">
+                  <div class="receipt-avatar" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">{{ getInitials(user.name) }}</div>
+                  <div>
+                    <div class="receipt-name">{{ user.name }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="mode-badge" style="background: #e0e7ff; color: #4338ca;">{{ user.role }}</span>
+              </td>
+              <td>{{ user.email }}</td>
+              <td style="color: #64748b; font-size: 12px;">{{ user.lastLogin || 'Never' }}</td>
+              <td>
+                <!-- Toggle Switch -->
+                <label class="switch">
+                  <input type="checkbox" [checked]="user.status === 'Active'" (change)="toggleUserStatus(user, $event)">
+                  <span class="slider round"></span>
+                </label>
+                <span style="font-size: 12px; margin-left: 6px; font-weight: 600;" [ngClass]="{'text-success': user.status === 'Active', 'text-danger': user.status === 'Inactive'}">
+                  {{ user.status }}
+                </span>
+              </td>
+              <td>
+                <button class="action-btn" (click)="$event.stopPropagation(); selectUser(user)">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="filteredUsers.length === 0">
+              <td colspan="7" class="empty-state">
+                <i class="fa-solid fa-inbox"></i>
+                <p>No employees found matching your search.</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ================== GRID VIEW (Cards) ================== -->
+      <div *ngIf="isGridView()" class="receipt-grid">
+        <div 
+          class="receipt-grid-card" 
+          *ngFor="let user of filteredUsers"
+          [class.selected]="selectedUser?.id === user.id"
+          (click)="selectUser(user)"
+        >
+          <div class="grid-card-header">
+            <div class="grid-card-avatar" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">{{ getInitials(user.name) }}</div>
+            <span class="grid-card-status" [ngClass]="{
+              'status-cleared': user.status === 'Active',
+              'status-pending': user.status === 'Inactive'
+            }">
+              {{ user.status }}
+            </span>
+          </div>
+          <div class="grid-card-body">
+            <h4>{{ user.name }}</h4>
+            <span class="grid-card-sub">{{ user.email }}</span>
+            <div class="grid-card-details">
+              <p><i class="fa-solid fa-briefcase"></i> Role: {{ user.role }}</p>
+              <p><i class="fa-solid fa-clock"></i> Last Login: {{ user.lastLogin || 'Never' }}</p>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="filteredUsers.length === 0" class="empty-state-grid">
+          <i class="fa-solid fa-inbox"></i>
+          <p>No employees found</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DETAIL SECTION (THE FULL EMPLOYEE FILE) -->
+  <div class="detail-section" *ngIf="selectedUser">
+    <div class="detail-section-header">
+      <div class="detail-section-title">
+        <div class="detail-avatar" style="background: linear-gradient(135deg, #7c3aed, #6d28d9); position: relative; overflow: hidden;">
+          <span>{{ getInitials(selectedUser.name) }}</span>
+        </div>
+        <div>
+          <h3>{{ selectedUser.name }}</h3>
+          <p style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <span><i class="fa-solid fa-envelope" style="width: 14px;"></i> {{ selectedUser.email }}</span>
+            <span><i class="fa-solid fa-phone" style="width: 14px;"></i> {{ selectedUser.phone || 'N/A' }}</span>
+            <span><i class="fa-solid fa-id-card" style="width: 14px;"></i> CNIC: {{ selectedUser.cnic || 'N/A' }}</span>
+          </p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-action" (click)="openEditModal()" style="background: #2563eb; color: white; border: none;">
+          <i class="fa-solid fa-pen"></i> Edit Profile
+        </button>
+        <button class="btn-action" (click)="resetPassword(selectedUser)" style="background: white; border: 1px solid #e2e8f0;">
+          <i class="fa-solid fa-key"></i> Reset Pass
+        </button>
+      </div>
+    </div>
+
+    <div class="detail-tab-content">
+      
+      <!-- SECTION 1: Personal & Job Info -->
+      <div class="info-card-section">
+        <div class="section-card-title">
+          <i class="fa-solid fa-id-badge"></i> Personal & Employment Details
+        </div>
+        
+        <div class="voucher-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+          <!-- Column 1: Personal -->
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div class="voucher-item">
+              <span class="v-label">Full Name</span>
+              <span class="v-value">{{ selectedUser.name }}</span>
+            </div>
+            <div class="voucher-item">
+              <span class="v-label">CNIC Number</span>
+              <span class="v-value">{{ selectedUser.cnic || 'Not Provided' }}</span>
+            </div>
+            <div class="voucher-item">
+              <span class="v-label">Phone Number</span>
+              <span class="v-value">{{ selectedUser.phone || 'Not Provided' }}</span>
+            </div>
+            <div class="voucher-item">
+              <span class="v-label">Email Address</span>
+              <span class="v-value">{{ selectedUser.email }}</span>
+            </div>
+          </div>
+
+          <!-- Column 2: Job Info -->
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div class="voucher-item">
+              <span class="v-label">User Role</span>
+              <span class="v-value mode-badge" style="background: #e0e7ff; color: #4338ca; display: inline-block;">{{ selectedUser.role }}</span>
+            </div>
+            <div class="voucher-item">
+              <span class="v-label">Date of Joining</span>
+              <span class="v-value">{{ selectedUser.joinDate || 'N/A' }}</span>
+            </div>
+            <div class="voucher-item">
+              <span class="v-label">Current Status</span>
+              <span class="v-value font-bold" [ngClass]="{'text-success': selectedUser.status === 'Active', 'text-danger': selectedUser.status === 'Inactive'}">
+                {{ selectedUser.status }}
+              </span>
+            </div>
+            <div class="voucher-item">
+              <span class="v-label">Last System Login</span>
+              <span class="v-value">{{ selectedUser.lastLogin || 'Never logged in' }}</span>
+            </div>
+          </div>
+          
+          <!-- Column 3: Address -->
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div class="voucher-item" style="grid-column: span 1; height: 100%;">
+              <span class="v-label">Residential Address</span>
+              <span class="v-value" style="line-height: 1.5;">{{ selectedUser.address || 'No address on file' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: Emergency Contact -->
+      <div class="info-card-section" style="margin-top: 16px;">
+        <div class="section-card-title">
+          <i class="fa-solid fa-phone-flip"></i> Emergency Contact
+        </div>
+        <div class="voucher-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="voucher-item">
+            <span class="v-label">Contact Name</span>
+            <span class="v-value">{{ selectedUser.emergencyContact?.name || 'N/A' }}</span>
+          </div>
+          <div class="voucher-item">
+            <span class="v-label">Relationship</span>
+            <span class="v-value">{{ selectedUser.emergencyContact?.relation || 'N/A' }}</span>
+          </div>
+          <div class="voucher-item" style="grid-column: span 2;">
+            <span class="v-label">Emergency Phone</span>
+            <span class="v-value" style="font-weight: 700; color: #dc2626;">{{ selectedUser.emergencyContact?.phone || 'N/A' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 3: Login History -->
+      <div class="info-card-section" style="margin-top: 16px;">
+        <div class="section-card-title">
+          <i class="fa-solid fa-clock-rotate-left"></i> Login Activity
+        </div>
+        <div class="table-responsive">
+          <table class="receipt-table" style="border: 1px solid #f1f5f9; border-radius: 8px; overflow: hidden;">
+            <thead>
+              <tr>
+                <th>Date & Time</th>
+                <th>IP Address</th>
+                <th>Device / Browser</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let log of selectedUser.loginHistory">
+                <td>{{ log.date }}</td>
+                <td style="font-family: monospace;">{{ log.ip }}</td>
+                <td>{{ log.device }}</td>
+              </tr>
+              <tr *ngIf="!selectedUser.loginHistory || selectedUser.loginHistory.length === 0">
+                <td colspan="3" class="empty-state" style="padding: 20px !important;">
+                  <p>No login history available.</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div *ngIf="showModal" class="modal-overlay">
+  <div class="modal-container">
+    <div class="modal-header-bar">
+      <h3>{{ isEditMode ? 'Edit Employee Profile' : 'Hire New Employee' }}</h3>
+      <button class="modal-close-btn" type="button" (click)="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body-content">
+      <div class="form-grid-2">
+        
+        <!-- Avatar Uploader (Visual Only for now) -->
+        <div class="form-group full-width" style="display: flex; align-items: center; gap: 16px; margin-bottom: 8px;">
+          <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; border: 2px dashed #cbd5e1; cursor: pointer;">
+            {{ getInitials(activeUser.name) || '?' }}
+          </div>
+          <div>
+            <button style="background: #f1f5f9; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">Upload Photo</button>
+            <p style="font-size: 11px; color: #94a3b8; margin: 2px 0 0 0;">JPG, PNG, or GIF (Max 2MB)</p>
+          </div>
+        </div>
+
+        <!-- Personal Info -->
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" class="input-ctrl" [(ngModel)]="activeUser.name" placeholder="Enter full name">
+        </div>
+        <div class="form-group">
+          <label>CNIC Number *</label>
+          <input type="text" class="input-ctrl" [(ngModel)]="activeUser.cnic" placeholder="XXXXX-XXXXXXX-X">
+        </div>
+        <div class="form-group">
+          <label>Phone Number *</label>
+          <input type="text" class="input-ctrl" [(ngModel)]="activeUser.phone" placeholder="+92 300 1234567">
+        </div>
+        <div class="form-group">
+          <label>Email Address *</label>
+          <input type="email" class="input-ctrl" [(ngModel)]="activeUser.email" placeholder="user@agency.com">
+        </div>
+        <div class="form-group full-width">
+          <label>Residential Address</label>
+          <input type="text" class="input-ctrl" [(ngModel)]="activeUser.address" placeholder="Street, City, Province">
+        </div>
+
+        <!-- Job Info -->
+        <div class="form-group">
+          <label>User Role</label>
+          <select class="input-ctrl" [(ngModel)]="activeUser.role">
+            <option value="Admin">Admin</option>
+            <option value="Manager">Manager</option>
+            <option value="Staff">Staff</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date of Joining</label>
+          <input type="date" class="input-ctrl" [(ngModel)]="activeUser.joinDate">
+        </div>
+        <div class="form-group">
+          <label>Password <span *ngIf="!isEditMode">(Required)</span></label>
+          <input type="password" class="input-ctrl" [(ngModel)]="activeUser.password" placeholder="Min 6 characters">
+        </div>
+        <div class="form-group full-width" *ngIf="isEditMode">
+          <label>Status</label>
+          <div class="segmented-control" style="width: 100%; justify-content: flex-start; margin-top: 4px;">
+            <button class="segmented-btn" [class.active]="activeUser.status === 'Active'" (click)="activeUser.status = 'Active'">Active</button>
+            <button class="segmented-btn" [class.active]="activeUser.status === 'Inactive'" (click)="activeUser.status = 'Inactive'">Inactive</button>
+          </div>
+        </div>
+
+        <!-- Emergency Contact -->
+        <div class="form-group">
+          <label>Emergency Contact Name</label>
+          <input type="text" class="input-ctrl" [(ngModel)]="activeUser.emergencyName" placeholder="Full name">
+        </div>
+        <div class="form-group">
+          <label>Emergency Contact Phone</label>
+          <input type="text" class="input-ctrl" [(ngModel)]="activeUser.emergencyPhone" placeholder="+92 300 0000000">
+        </div>
+        
+      </div>
+    </div>
+    <div class="modal-footer-bar">
+      <button type="button" class="btn-cancel" (click)="closeModal()">Cancel</button>
+      <button type="button" class="btn-save" (click)="saveUserData()">{{ isEditMode ? 'Update Changes' : 'Hire Employee' }}</button>
+    </div>
+  </div>
+</div>

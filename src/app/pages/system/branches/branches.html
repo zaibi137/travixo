@@ -1,0 +1,313 @@
+<!-- src/app/pages/system/branches/branches.html -->
+
+<div class="customer-page-container">
+  
+  <!-- TOP HEADER BANNER -->
+  <div class="invoice-top-banner">
+    <div class="banner-left">
+      <div class="header-badge-icon">
+        <i class="fa-solid fa-code-branch"></i>
+      </div>
+      <div>
+        <h2>Branch Management</h2>
+      </div>
+    </div>
+    <div class="banner-actions">
+      <button class="create-customer-btn" type="button" (click)="openCreateModal()">
+        <i class="fa-solid fa-plus"></i> Add New Branch
+      </button>
+    </div>
+  </div>
+
+  <!-- FULL-WIDTH TABLE/GRID SECTION -->
+  <div class="full-width-table-section">
+    <div class="table-container">
+      
+      <!-- Toolbar -->
+      <div class="table-header-toolbar">
+        <div class="table-title">
+          <i class="fa-solid fa-list-ul"></i>
+          <span>Branch Directory</span>
+          <span class="result-count">{{ filteredBranches.length }} branches</span>
+        </div>
+        
+        <!-- Right Side: Search + Toggle -->
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <div class="search-wrapper" style="position: relative; width: 250px;">
+            <i class="fa-solid fa-search search-icon" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+            <input
+              type="text"
+              class="search-input"
+              [(ngModel)]="searchQuery"
+              placeholder="Search branch code, name, or city..."
+              style="padding-left: 34px; width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px 8px 34px; outline: none; transition: 0.2s;"
+            >
+          </div>
+
+          <!-- View Toggle Button -->
+          <button class="toolbar-btn" (click)="toggleView()">
+            <i class="fa-solid" [ngClass]="{'fa-table-cells': isGridView(), 'fa-table': !isGridView()}"></i>
+            {{ isGridView() ? 'Grid View' : 'List View' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- ================== LIST VIEW (Table) ================== -->
+      <div *ngIf="!isGridView()" class="table-responsive">
+        <table class="receipt-table">
+          <thead>
+            <tr>
+              <th style="width: 40px;">#</th>
+              <th>Branch Code</th>
+              <th>Branch Name</th>
+              <th>City</th>
+              <th>Manager</th>
+              <th>Status</th>
+              <th style="width: 80px;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let branch of filteredBranches; let i = index"
+              [class.selected]="selectedBranch?.id === branch.id"
+              (click)="selectBranch(branch)"
+              style="cursor: pointer;"
+            >
+              <td>{{ i + 1 }}</td>
+              <td>
+                <span class="font-bold" style="color: #2563eb;">{{ branch.code }}</span>
+              </td>
+              <td>
+                <div class="receipt-cell">
+                  <div class="receipt-avatar" style="background: linear-gradient(135deg, #059669, #047857);">
+                    <i class="fa-solid fa-building" style="font-size: 14px;"></i>
+                  </div>
+                  <div>
+                    <div class="receipt-name">
+                      {{ branch.name }}
+                      <!-- 🏆 HEAD OFFICE BADGE -->
+                      <span *ngIf="branch.isHeadOffice" class="badge badge-cleared" style="margin-left: 8px; font-size: 10px; background: #fef3c7; color: #d97706; padding: 2px 8px;">
+                        <i class="fa-solid fa-star"></i> HQ
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td>{{ branch.city }}</td>
+              <td>{{ branch.manager || 'N/A' }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="{
+                  'status-cleared': branch.status === 'Active',
+                  'status-cancelled': branch.status === 'Inactive'
+                }">
+                  <span class="status-dot"></span>
+                  {{ branch.status }}
+                </span>
+              </td>
+              <td>
+                <button class="action-btn" (click)="$event.stopPropagation(); selectBranch(branch)">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="filteredBranches.length === 0">
+              <td colspan="7" class="empty-state">
+                <i class="fa-solid fa-inbox"></i>
+                <p>No branches found matching your search.</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ================== GRID VIEW (Cards) ================== -->
+      <div *ngIf="isGridView()" class="receipt-grid">
+        <div 
+          class="receipt-grid-card" 
+          *ngFor="let branch of filteredBranches"
+          [class.selected]="selectedBranch?.id === branch.id"
+          (click)="selectBranch(branch)"
+        >
+          <div class="grid-card-header">
+            <div class="grid-card-avatar" style="background: linear-gradient(135deg, #059669, #047857);">
+              <i class="fa-solid fa-building" style="font-size: 20px;"></i>
+            </div>
+            <span class="grid-card-status" [ngClass]="{
+              'status-cleared': branch.status === 'Active',
+              'status-pending': branch.status === 'Inactive'
+            }">
+              {{ branch.status }}
+            </span>
+          </div>
+          <div class="grid-card-body">
+            <h4>
+              {{ branch.code }}
+              <!-- 🏆 HEAD OFFICE BADGE -->
+              <span *ngIf="branch.isHeadOffice" style="font-size: 10px; background: #fef3c7; color: #d97706; padding: 2px 8px; border-radius: 12px; margin-left: 6px;">
+                <i class="fa-solid fa-star"></i> HQ
+              </span>
+            </h4>
+            <span class="grid-card-sub">{{ branch.name }}</span>
+            <div class="grid-card-details">
+              <p><i class="fa-solid fa-location-dot"></i> {{ branch.city }}</p>
+              <p><i class="fa-solid fa-user-tie"></i> Manager: {{ branch.manager || 'N/A' }}</p>
+              <p><i class="fa-solid fa-phone"></i> {{ branch.phone || 'N/A' }}</p>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="filteredBranches.length === 0" class="empty-state-grid">
+          <i class="fa-solid fa-inbox"></i>
+          <p>No branches found</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DETAIL SECTION (Drops below table) -->
+  <div class="detail-section" *ngIf="selectedBranch">
+    <div class="detail-section-header">
+      <div class="detail-section-title">
+        <div class="detail-avatar" style="background: linear-gradient(135deg, #059669, #047857);">
+          <i class="fa-solid fa-building" style="font-size: 20px;"></i>
+        </div>
+        <div>
+          <h3>
+            {{ selectedBranch.code }} - {{ selectedBranch.name }}
+            <span *ngIf="selectedBranch.isHeadOffice" class="badge badge-cleared" style="font-size: 12px; background: #fef3c7; color: #d97706; padding: 2px 12px; border-radius: 12px; margin-left: 10px;">
+              <i class="fa-solid fa-star"></i> Head Office
+            </span>
+          </h3>
+          <p style="display: flex; gap: 16px; flex-wrap: wrap;">
+            <span><i class="fa-solid fa-location-dot" style="width: 14px;"></i> {{ selectedBranch.address }}</span>
+            <span><i class="fa-solid fa-phone" style="width: 14px;"></i> {{ selectedBranch.phone || 'N/A' }}</span>
+          </p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-action" (click)="openEditModal()" style="background: #2563eb; color: white; border: none;">
+          <i class="fa-solid fa-pen"></i> Edit Branch
+        </button>
+      </div>
+    </div>
+
+    <div class="detail-tab-content">
+      
+      <!-- 📊 KPI STATS CARDS -->
+      <div class="kpi-stats-mini" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;">
+        <div class="kpi-mini-card" style="background: #ffffff; border: 1px solid #f1f5f9; border-radius: 8px; padding: 12px; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+          <div style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase;">Total Sales (Month)</div>
+          <div style="font-size: 18px; font-weight: 700; color: #0f172a; margin-top: 2px;">₨ 485,000</div>
+        </div>
+        <div class="kpi-mini-card" style="background: #ffffff; border: 1px solid #f1f5f9; border-radius: 8px; padding: 12px; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+          <div style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase;">Invoices</div>
+          <div style="font-size: 18px; font-weight: 700; color: #0f172a; margin-top: 2px;">24</div>
+        </div>
+        <div class="kpi-mini-card" style="background: #ffffff; border: 1px solid #f1f5f9; border-radius: 8px; padding: 12px; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+          <div style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase;">Pending</div>
+          <div style="font-size: 18px; font-weight: 700; color: #d97706; margin-top: 2px;">3</div>
+        </div>
+        <div class="kpi-mini-card" style="background: #ffffff; border: 1px solid #f1f5f9; border-radius: 8px; padding: 12px; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+          <div style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase;">Branch Rating</div>
+          <div style="font-size: 18px; font-weight: 700; color: #16a34a; margin-top: 2px;">4.8 ⭐</div>
+        </div>
+      </div>
+
+      <div class="info-card-section">
+        <div class="section-card-title">
+          <i class="fa-solid fa-circle-info"></i> Branch Details
+        </div>
+        
+        <div class="voucher-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="voucher-item">
+            <span class="v-label">Branch Code</span>
+            <span class="v-value font-bold" style="color: #2563eb;">{{ selectedBranch.code }}</span>
+          </div>
+          <div class="voucher-item">
+            <span class="v-label">Branch Name</span>
+            <span class="v-value">{{ selectedBranch.name }}</span>
+          </div>
+          <div class="voucher-item">
+            <span class="v-label">City / Region</span>
+            <span class="v-value">{{ selectedBranch.city }}</span>
+          </div>
+          <div class="voucher-item">
+            <span class="v-label">Branch Manager</span>
+            <span class="v-value">{{ selectedBranch.manager || 'Not Assigned' }}</span>
+          </div>
+          <div class="voucher-item" style="grid-column: span 2;">
+            <span class="v-label">Full Address</span>
+            <span class="v-value">{{ selectedBranch.address }}</span>
+          </div>
+          <div class="voucher-item">
+            <span class="v-label">Contact Phone</span>
+            <span class="v-value">{{ selectedBranch.phone || 'N/A' }}</span>
+          </div>
+          <div class="voucher-item">
+            <span class="v-label">Current Status</span>
+            <span class="v-value font-bold" [ngClass]="{'text-success': selectedBranch.status === 'Active', 'text-danger': selectedBranch.status === 'Inactive'}">
+              {{ selectedBranch.status }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div *ngIf="showModal" class="modal-overlay">
+  <div class="modal-container">
+    <div class="modal-header-bar">
+      <h3>{{ isEditMode ? 'Edit Branch' : 'Add New Branch' }}</h3>
+      <button class="modal-close-btn" type="button" (click)="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body-content">
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Branch Code *</label>
+          <input type="text" class="input-ctrl" [(ngModel)]="activeBranch.code" placeholder="e.g. LHR-AIR">
+        </div>
+        <div class="form-group">
+          <label>Branch Name *</label>
+          <input type="text" class="input-ctrl" [(ngModel)]="activeBranch.name" placeholder="e.g. Lahore Airport Office">
+        </div>
+        <div class="form-group">
+          <label>City / Region *</label>
+          <input type="text" class="input-ctrl" [(ngModel)]="activeBranch.city" placeholder="e.g. Lahore, Punjab">
+        </div>
+        <div class="form-group">
+          <label>Branch Manager</label>
+          <input type="text" class="input-ctrl" [(ngModel)]="activeBranch.manager" placeholder="Enter manager name">
+        </div>
+        <!-- 🆕 HEAD OFFICE TOGGLE -->
+        <div class="form-group full-width">
+          <div class="segmented-control" style="width: 100%; justify-content: flex-start; margin-top: 4px;">
+            <button class="segmented-btn" [class.active]="activeBranch.isHeadOffice === true" (click)="activeBranch.isHeadOffice = true">Head Office (HQ)</button>
+            <button class="segmented-btn" [class.active]="activeBranch.isHeadOffice === false" (click)="activeBranch.isHeadOffice = false">Sub-Branch</button>
+          </div>
+        </div>
+        <div class="form-group full-width">
+          <label>Full Address *</label>
+          <input type="text" class="input-ctrl" [(ngModel)]="activeBranch.address" placeholder="Street, Sector, Landmark">
+        </div>
+        <div class="form-group">
+          <label>Contact Phone</label>
+          <input type="text" class="input-ctrl" [(ngModel)]="activeBranch.phone" placeholder="+92 300 1234567">
+        </div>
+        <div class="form-group full-width" *ngIf="isEditMode">
+          <label>Status</label>
+          <div class="segmented-control" style="width: 100%; justify-content: flex-start; margin-top: 4px;">
+            <button class="segmented-btn" [class.active]="activeBranch.status === 'Active'" (click)="activeBranch.status = 'Active'">Active</button>
+            <button class="segmented-btn" [class.active]="activeBranch.status === 'Inactive'" (click)="activeBranch.status = 'Inactive'">Inactive</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer-bar">
+      <button type="button" class="btn-cancel" (click)="closeModal()">Cancel</button>
+      <button type="button" class="btn-save" (click)="saveBranchData()">{{ isEditMode ? 'Update Changes' : 'Create Branch' }}</button>
+    </div>
+  </div>
+</div>

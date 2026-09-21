@@ -1,0 +1,606 @@
+<!-- src/app/pages/purchase/vendor-payment/vendor-payment.html -->
+
+<div class="payment-page-container">
+
+  <!-- TOP BANNER - Full Width -->
+  <div class="payment-top-banner">
+    <div class="banner-left">
+      <div class="header-badge-icon">
+        <i class="fa-solid fa-hand-holding-dollar"></i>
+      </div>
+      <div>
+        <h2>Vendor Payment</h2>
+      </div>
+    </div>
+    <div class="banner-actions">
+      <button class="btn-export" type="button" (click)="exportData()">
+        <i class="fa-solid fa-download"></i> Export
+      </button>
+      <button class="create-payment-btn" type="button" (click)="openCreateModal()">
+        <i class="fa-solid fa-plus"></i> New Payment
+      </button>
+    </div>
+  </div>
+
+  <!-- TWO-COLUMN TOP SECTION -->
+  <div class="two-column-top">
+
+    <!-- LEFT COLUMN: Search & Filters -->
+    <div class="filter-column">
+      <div class="filter-card">
+        <div class="search-wrapper">
+          <i class="fa-solid fa-search search-icon"></i>
+          <input
+            type="text"
+            class="search-input"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="applyFilters()"
+            placeholder="Search by PMT #, vendor, reference..."
+          >
+          <button class="clear-search" *ngIf="searchQuery" (click)="searchQuery = ''; applyFilters()">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Vendor</label>
+            <select class="filter-select" [(ngModel)]="vendorFilter" (ngModelChange)="applyFilters()">
+              <option value="All">All Vendors</option>
+              <option *ngFor="let vendor of getUniqueVendors()" [value]="vendor">
+                {{ vendor }}
+              </option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Payment Method</label>
+            <select class="filter-select" [(ngModel)]="methodFilter" (ngModelChange)="applyFilters()">
+              <option value="All">All Methods</option>
+              <option value="Cash">💵 Cash</option>
+              <option value="Bank Transfer">🏦 Bank Transfer</option>
+              <option value="Cheque">📝 Cheque</option>
+              <option value="Online Payment">💻 Online</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="quick-filters">
+          <span class="quick-filter-label">Quick Filters:</span>
+          <button
+            class="filter-chip"
+            *ngFor="let chip of filterChips"
+            [class.active]="statusFilter === chip.value"
+            (click)="statusFilter = chip.value; applyFilters()">
+            {{ chip.icon }} {{ chip.label }}
+          </button>
+          <button
+            class="filter-chip reset-chip"
+            *ngIf="statusFilter !== 'All' || vendorFilter !== 'All' || searchQuery"
+            (click)="clearAllFilters()">
+            <i class="fa-solid fa-rotate"></i> Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Stats Cards -->
+    <div class="stats-column">
+      <div class="stats-grid">
+        <div class="stat-card total">
+          <div class="stat-icon">
+            <i class="fa-solid fa-coins"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Payments</span>
+            <span class="stat-value">{{ payments.length }}</span>
+          </div>
+        </div>
+
+        <div class="stat-card completed">
+          <div class="stat-icon">
+            <i class="fa-solid fa-check-circle"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Completed</span>
+            <span class="stat-value">{{ getCompletedCount() }}</span>
+          </div>
+        </div>
+
+        <div class="stat-card pending">
+          <div class="stat-icon">
+            <i class="fa-solid fa-clock"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Pending</span>
+            <span class="stat-value">{{ getPendingCount() }}</span>
+          </div>
+        </div>
+
+        <div class="stat-card amount">
+          <div class="stat-icon">
+            <i class="fa-solid fa-money-bill-wave"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Paid</span>
+            <span class="stat-value">₨ {{ getTotalPaid() | number }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FULL-WIDTH MIDDLE SECTION: Payment Table -->
+  <div class="full-width-table-section">
+    <div class="table-container">
+      <div class="table-header-toolbar">
+        <div class="table-title">
+          <i class="fa-solid fa-list-ul"></i>
+          <span>Payment Directory</span>
+          <span class="result-count">{{ filteredPayments.length }} results</span>
+        </div>
+        <div class="table-toolbar-actions">
+          <span class="total-payable">
+            Total Amount: <strong>₨ {{ getFilteredTotal() | number }}</strong>
+          </span>
+        </div>
+      </div>
+
+      <!-- Table View -->
+      <div class="table-responsive">
+        <table class="payment-table">
+          <thead>
+            <tr>
+              <th style="width: 30px;">#</th>
+              <th>PMT #</th>
+              <th>Vendor</th>
+              <th>Date</th>
+              <th>Method</th>
+              <th>Reference</th>
+              <th>Amount (PKR)</th>
+              <th>Status</th>
+              <th style="width: 80px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let item of paginatedPayments; let i = index"
+              [class.selected]="item.id === selectedPayment?.id"
+              (click)="selectPayment(item)">
+              <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+              <td>
+                <div class="pmt-cell">
+                  <span class="pmt-number">{{ item.paymentNumber }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="vendor-cell">
+                  <div class="vendor-avatar">{{ item.vendorName.charAt(0) }}</div>
+                  <span class="vendor-name">{{ item.vendorName }}</span>
+                </div>
+              </td>
+              <td>{{ item.paymentDate | date:'dd MMM yyyy' }}</td>
+              <td>
+                <span class="method-badge" [ngClass]="getMethodClass(item.paymentMethod)">
+                  {{ getMethodIcon(item.paymentMethod) }} {{ item.paymentMethod }}
+                </span>
+              </td>
+              <td>{{ item.referenceNumber || '—' }}</td>
+              <td class="amount-total">₨ {{ item.amountPaid | number }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="getStatusClass(item.paymentStatus)">
+                  <span class="status-dot"></span>
+                  {{ item.paymentStatus }}
+                </span>
+              </td>
+              <td>
+                <button class="action-btn" (click)="$event.stopPropagation(); selectPayment(item)">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+                <button class="action-btn edit-btn" (click)="$event.stopPropagation(); openEditModal(item)">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="paginatedPayments.length === 0">
+              <td colspan="9" class="empty-state">
+                <i class="fa-solid fa-inbox"></i>
+                <p>No payments found matching your criteria</p>
+                <button class="clear-filters-btn" (click)="clearAllFilters()">Clear Filters</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="table-footer">
+        <div class="pagination-info">
+          Showing {{ (currentPage - 1) * pageSize + 1 }} -
+          {{ Math.min(currentPage * pageSize, filteredPayments.length) }}
+          of {{ filteredPayments.length }} payments
+        </div>
+        <div class="pagination-controls">
+          <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <button
+            class="page-btn"
+            *ngFor="let p of getPageNumbers()"
+            [class.active]="currentPage === p"
+            (click)="goToPage(p)">
+            {{ p }}
+          </button>
+          <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+        <div class="page-size-selector">
+          <select [(ngModel)]="pageSize" (ngModelChange)="currentPage = 1">
+            <option value="5">5 per page</option>
+            <option value="10">10 per page</option>
+            <option value="25">25 per page</option>
+            <option value="50">50 per page</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FULL-WIDTH BOTTOM SECTION: Payment Detail Panel -->
+  <div class="full-width-bottom-section" *ngIf="selectedPayment">
+    <div class="payment-detail-panel">
+      <div class="detail-header">
+        <div class="detail-title">
+          <i class="fa-solid fa-file-invoice"></i>
+          <h3>Payment Details: {{ selectedPayment.paymentNumber }}</h3>
+        </div>
+        <div class="detail-actions">
+          <button class="detail-print-btn" (click)="printPayment(selectedPayment)">
+            <i class="fa-solid fa-print"></i> Print Voucher
+          </button>
+          <button class="detail-delete-btn" (click)="deletePayment()">
+            <i class="fa-solid fa-trash"></i> Delete
+          </button>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <!-- Left Column -->
+        <div class="detail-left">
+          <div class="info-card">
+            <div class="info-card-title">
+              <i class="fa-solid fa-building"></i> Payment Information
+            </div>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Payment #</span>
+                <span class="info-value">{{ selectedPayment.paymentNumber }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Vendor</span>
+                <span class="info-value">{{ selectedPayment.vendorName }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Payment Date</span>
+                <span class="info-value">{{ selectedPayment.paymentDate | date:'dd MMM yyyy' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Payment Method</span>
+                <span class="info-value">{{ getMethodIcon(selectedPayment.paymentMethod) }} {{ selectedPayment.paymentMethod }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Reference #</span>
+                <span class="info-value">{{ selectedPayment.referenceNumber || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Bank Account</span>
+                <span class="info-value">{{ selectedPayment.bankAccount || '—' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-card" style="margin-top: 12px;">
+            <div class="info-card-title">
+              <i class="fa-solid fa-receipt"></i> Purchases Being Paid
+            </div>
+            <div class="items-table-wrapper">
+              <table class="items-table">
+                <thead>
+                  <tr>
+                    <th>Purchase #</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let purchaseId of selectedPayment.purchaseIds; let i = index">
+                    <td>{{ selectedPayment.purchaseNumbers[i] || 'PO-' + purchaseId }}</td>
+                    <td>₨ {{ selectedPayment.totalPayable / selectedPayment.purchaseIds.length | number }}</td>
+                    <td><span class="status-badge status-completed">✅ Paid</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div *ngIf="selectedPayment.notes" class="payment-notes">
+              <strong>Notes:</strong> {{ selectedPayment.notes }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="detail-right">
+          <div class="info-card financial-summary">
+            <div class="info-card-title">
+              <i class="fa-solid fa-calculator"></i> Financial Summary
+            </div>
+            <div class="financial-grid">
+              <div class="financial-item">
+                <span class="financial-label">Total Payable</span>
+                <span class="financial-value">₨ {{ selectedPayment.totalPayable | number }}</span>
+              </div>
+              <div class="financial-item" *ngIf="selectedPayment.discountReceived > 0">
+                <span class="financial-label">Discount Received</span>
+                <span class="financial-value text-success">-₨ {{ selectedPayment.discountReceived | number }}</span>
+              </div>
+              <div class="financial-item total-line">
+                <span class="financial-label">Amount Paid</span>
+                <span class="financial-value total-amount">₨ {{ selectedPayment.amountPaid | number }}</span>
+              </div>
+              <div class="financial-item" *ngIf="selectedPayment.paymentStatus === 'Completed'">
+                <span class="financial-label">Payment Status</span>
+                <span class="status-badge status-completed">✅ Completed</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-card payment-timeline" style="margin-top: 12px;">
+            <div class="info-card-title">
+              <i class="fa-solid fa-timeline"></i> Timeline
+            </div>
+            <div class="timeline-items">
+              <div class="timeline-item">
+                <div class="timeline-icon created">
+                  <i class="fa-solid fa-plus"></i>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-title">Payment Created</div>
+                  <div class="timeline-date">{{ selectedPayment.createdAt | date:'dd MMM yyyy, h:mm a' }}</div>
+                </div>
+              </div>
+              <div class="timeline-item" *ngIf="selectedPayment.paymentStatus === 'Approved' || selectedPayment.paymentStatus === 'Completed'">
+                <div class="timeline-icon approved">
+                  <i class="fa-solid fa-check"></i>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-title">Payment {{ selectedPayment.paymentStatus }}</div>
+                  <div class="timeline-date">{{ selectedPayment.updatedAt | date:'dd MMM yyyy, h:mm a' }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== CREATE/EDIT MODAL ==================== -->
+  <div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+
+      <!-- Modal Header -->
+      <div class="modal-header-bar">
+        <div class="modal-header-left">
+          <i class="fa-solid" [ngClass]="isEditMode ? 'fa-pen-to-square' : 'fa-hand-holding-dollar'"></i>
+          <h3>{{ isEditMode ? 'Edit Payment' : 'Create New Payment' }}</h3>
+        </div>
+        <button class="modal-close-btn" type="button" (click)="closeModal()">&times;</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body-content">
+
+        <!-- Form Grid - Two Columns -->
+        <div class="form-grid-2">
+
+          <!-- Left Column -->
+          <div class="form-column">
+
+            <!-- Payment Number (Auto-generated) -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-hashtag"></i>
+                PAYMENT NUMBER
+              </label>
+              <input
+                type="text"
+                class="input-ctrl"
+                [value]="activePayment.paymentNumber || generatePaymentNumber()"
+                disabled
+                style="background: #f1f5f9;">
+            </div>
+
+            <!-- Payment Date -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-calendar-day"></i>
+                PAYMENT DATE *
+              </label>
+              <input
+                type="date"
+                class="input-ctrl"
+                [(ngModel)]="activePayment.paymentDate"
+                [value]="activePayment.paymentDate | date:'yyyy-MM-dd'">
+            </div>
+
+            <!-- Vendor -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-building"></i>
+                VENDOR *
+              </label>
+              <select class="input-ctrl" [(ngModel)]="activePayment.vendorId" (ngModelChange)="onVendorChange($event)">
+                <option value="">Select Vendor</option>
+                <option *ngFor="let vendor of vendors" [value]="vendor.id">
+                  {{ vendor.vendorName }}
+                </option>
+              </select>
+            </div>
+
+          </div>
+
+          <!-- Right Column -->
+          <div class="form-column">
+
+            <!-- Payment Method -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-credit-card"></i>
+                PAYMENT METHOD *
+              </label>
+              <select class="input-ctrl" [(ngModel)]="activePayment.paymentMethod">
+                <option value="Cash">💵 Cash</option>
+                <option value="Bank Transfer">🏦 Bank Transfer</option>
+                <option value="Cheque">📝 Cheque</option>
+                <option value="Online Payment">💻 Online Payment</option>
+              </select>
+            </div>
+
+            <!-- Reference Number -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-hashtag"></i>
+                REFERENCE NUMBER
+              </label>
+              <input
+                type="text"
+                class="input-ctrl"
+                [(ngModel)]="activePayment.referenceNumber"
+                placeholder="Cheque #, Transaction ID, etc.">
+            </div>
+
+            <!-- Bank Account -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-building-columns"></i>
+                BANK ACCOUNT
+              </label>
+              <input
+                type="text"
+                class="input-ctrl"
+                [(ngModel)]="activePayment.bankAccount"
+                placeholder="Account used for payment">
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Full Width - Select Purchases to Pay -->
+        <div class="form-group full-width" style="margin-top: 16px;">
+          <label>
+            <i class="fa-solid fa-receipt"></i>
+            SELECT PURCHASES TO PAY
+          </label>
+          <p style="font-size: 12px; color: #64748b; margin: 0 0 8px 0;">
+            Select purchases for {{ activePayment.vendorName || 'selected vendor' }}
+          </p>
+
+          <div class="purchases-list">
+            <div
+              class="purchase-item-select"
+              *ngFor="let purchase of vendorPurchases"
+              [class.selected]="isPurchaseSelected(purchase.id)"
+              (click)="togglePurchaseSelection(purchase)">
+              <div class="purchase-select-info">
+                <span class="purchase-number">{{ purchase.purchaseNumber }}</span>
+                <span class="purchase-amount">₨ {{ purchase.netPayable | number }}</span>
+                <span class="purchase-due">Due: {{ purchase.dueDate | date:'dd MMM yyyy' }}</span>
+              </div>
+              <div class="purchase-select-check">
+                <i class="fa-solid" [ngClass]="isPurchaseSelected(purchase.id) ? 'fa-check-circle' : 'fa-circle'"></i>
+              </div>
+            </div>
+            <div *ngIf="vendorPurchases.length === 0" class="no-purchases-msg">
+              <i class="fa-solid fa-inbox"></i>
+              <p>No outstanding purchases for this vendor</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Financial Summary - Two Columns -->
+        <div class="form-grid-2" style="margin-top: 16px;">
+
+          <!-- Left Column -->
+          <div class="form-column">
+            <div class="financial-summary-modal">
+              <div class="summary-row">
+                <span>Total Payable</span>
+                <span>₨ {{ activePayment.totalPayable | number }}</span>
+              </div>
+              <div class="summary-row" *ngIf="activePayment.discountReceived > 0">
+                <span>Discount Received</span>
+                <span class="text-success">-₨ {{ activePayment.discountReceived | number }}</span>
+              </div>
+              <div class="summary-row total">
+                <span>Amount to Pay</span>
+                <span>₨ {{ activePayment.amountPaid | number }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column -->
+          <div class="form-column">
+            <div class="financial-summary-modal">
+              <div class="summary-row">
+                <span>Discount Received</span>
+                <input
+                  type="number"
+                  class="input-ctrl-sm"
+                  [(ngModel)]="activePayment.discountReceived"
+                  (ngModelChange)="calculatePayment()"
+                  placeholder="0"
+                  min="0"
+                  style="width: 120px;">
+              </div>
+              <div class="summary-row">
+                <span>Payment Status</span>
+                <select class="input-ctrl-sm" [(ngModel)]="activePayment.paymentStatus" style="width: 140px;">
+                  <option value="Pending">⏳ Pending</option>
+                  <option value="Approved">✅ Approved</option>
+                  <option value="Completed">✅ Completed</option>
+                  <option value="Rejected">❌ Rejected</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Full Width - Notes -->
+        <div class="form-group full-width" style="margin-top: 16px;">
+          <label>
+            <i class="fa-solid fa-note-sticky"></i>
+            NOTES
+          </label>
+          <textarea class="textarea-ctrl" rows="2" [(ngModel)]="activePayment.notes" placeholder="Additional notes about this payment..."></textarea>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer-bar">
+        <button type="button" class="btn-cancel" (click)="closeModal()">
+          <i class="fa-solid fa-times"></i> Cancel
+        </button>
+        <button type="button" class="btn-save" (click)="savePayment()">
+          <i class="fa-solid" [ngClass]="isEditMode ? 'fa-pen' : 'fa-save'"></i>
+          {{ isEditMode ? 'Update Payment' : 'Save Payment' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

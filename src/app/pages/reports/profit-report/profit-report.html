@@ -1,0 +1,169 @@
+<div class="customer-page-container">
+  <!-- Top Banner -->
+  <div class="invoice-top-banner">
+    <div class="banner-left">
+      <div class="header-badge-icon">
+        <i class="fa-solid fa-chart-line"></i>
+      </div>
+      <div>
+        <h2>Profit & Loss Statement</h2>
+      </div>
+    </div>
+    <div class="banner-actions">
+      <button class="import-excel-btn" type="button" (click)="exportReport()">
+        <i class="fa-solid fa-file-excel"></i> Export CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filter-section-card">
+    <div class="filter-row-wrapper">
+      <div class="segmented-control-wrapper">
+        <div class="segmented-control">
+          <button class="segmented-btn" [class.active]="timeRange() === 'Monthly'" (click)="timeRange.set('Monthly'); loadReportData()">Monthly</button>
+          <button class="segmented-btn" [class.active]="timeRange() === 'Quarterly'" (click)="timeRange.set('Quarterly'); loadReportData()">Quarterly</button>
+          <button class="segmented-btn" [class.active]="timeRange() === 'Yearly'" (click)="timeRange.set('Yearly'); loadReportData()">Yearly</button>
+        </div>
+      </div>
+
+      <div class="date-picker-row-wrapper">
+        <div class="date-picker-row">
+          <div class="date-group">
+            <label>From</label>
+            <input type="date" class="date-input-ctrl" [ngModel]="startDate()" (ngModelChange)="startDate.set($event)">
+          </div>
+          <div class="date-group">
+            <label>To</label>
+            <input type="date" class="date-input-ctrl" [ngModel]="endDate()" (ngModelChange)="endDate.set($event)">
+          </div>
+          <button class="apply-filter-btn" type="button" (click)="loadReportData()">
+            <i class="fa-solid fa-magnifying-glass"></i> Apply
+          </button>
+        </div>
+        <span class="date-error" *ngIf="dateError()">{{ dateError() }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Stats Grid -->
+  <div class="kpi-stats-grid">
+    <div class="kpi-stat-card">
+      <div class="kpi-icon-box revenue">
+        <i class="fa-solid fa-coins"></i>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">Total Revenue</span>
+        <span class="kpi-value text-success">{{ revenue() | number }} PKR</span>
+        <span class="kpi-trend" [class.positive]="revenueTrend() >= 0" [class.negative]="revenueTrend() < 0">
+          <i class="fa-solid" [ngClass]="revenueTrend() >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
+          {{ revenueTrend() >= 0 ? '+' : '' }}{{ revenueTrend() | number:'1.1-1' }}% vs last period
+        </span>
+      </div>
+    </div>
+
+    <div class="kpi-stat-card">
+      <div class="kpi-icon-box cost">
+        <i class="fa-solid fa-cart-shopping"></i>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">Total Costs</span>
+        <span class="kpi-value text-danger">{{ costs() | number }} PKR</span>
+        <span class="kpi-trend" [class.positive]="costTrend() < 0" [class.negative]="costTrend() >= 0">
+          <i class="fa-solid" [ngClass]="costTrend() >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
+          {{ costTrend() >= 0 ? '+' : '' }}{{ costTrend() | number:'1.1-1' }}% vs last period
+        </span>
+      </div>
+    </div>
+
+    <div class="kpi-stat-card">
+      <div class="kpi-icon-box profit">
+        <i class="fa-solid fa-hand-holding-dollar"></i>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">Net Profit</span>
+        <span class="kpi-value text-primary">{{ profit() | number }} PKR</span>
+        <span class="kpi-trend" [class.positive]="profitTrend() >= 0" [class.negative]="profitTrend() < 0">
+          <i class="fa-solid" [ngClass]="profitTrend() >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
+          {{ profitTrend() >= 0 ? '+' : '' }}{{ profitTrend() | number:'1.1-1' }}% vs last period
+        </span>
+      </div>
+    </div>
+
+    <div class="kpi-stat-card">
+      <div class="kpi-icon-box margin">
+        <i class="fa-solid fa-percent"></i>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">Profit Margin</span>
+        <span class="kpi-value text-margin">{{ profitMargin() | number:'1.1-1' }}%</span>
+        <span class="kpi-trend text-muted">Net Profit &divide; Revenue</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Section -->
+  <div class="detail-section">
+    <div class="detail-section-header">
+      <div class="detail-section-title">
+        <i class="fa-solid fa-chart-column" style="color: #2563eb; font-size: 18px;"></i>
+        <h3>Profit Trend Analysis</h3>
+      </div>
+    </div>
+
+    <div class="chart-content-wrapper">
+      <!-- Real Bar Chart (pure CSS, no external library) -->
+      <div class="chart-placeholder-box" *ngIf="!isLoading(); else loadingChart">
+        <div class="bar-chart-wrapper">
+          <div class="bar-chart-col" *ngFor="let row of tableData()">
+            <div class="bar-chart-bars">
+              <div class="bar-chart-bar bar-revenue" [style.height.%]="barHeightPercent(row.revenue)" [title]="'Revenue: ' + (row.revenue | number) + ' PKR'"></div>
+              <div class="bar-chart-bar bar-cost" [style.height.%]="barHeightPercent(row.cost)" [title]="'Cost: ' + (row.cost | number) + ' PKR'"></div>
+            </div>
+            <span class="bar-chart-label">{{ row.month.split(' ')[0].slice(0, 3) }}</span>
+          </div>
+        </div>
+        <div class="chart-legend">
+          <span><i class="legend-dot legend-revenue"></i> Revenue</span>
+          <span><i class="legend-dot legend-cost"></i> Cost</span>
+        </div>
+      </div>
+
+      <ng-template #loadingChart>
+        <div class="chart-placeholder-box">
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          <p>Loading report data...</p>
+        </div>
+      </ng-template>
+
+      <div class="mini-table-container">
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Revenue</th>
+              <th>Cost</th>
+              <th>Profit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of tableData()">
+              <td class="font-bold">{{ row.month }}</td>
+              <td class="text-success">{{ row.revenue | number }} PKR</td>
+              <td class="text-danger">{{ row.cost | number }} PKR</td>
+              <td class="text-primary font-bold">{{ row.profit | number }} PKR</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td class="font-bold">TOTAL</td>
+              <td class="text-success font-bold">{{ revenue() | number }} PKR</td>
+              <td class="text-danger font-bold">{{ costs() | number }} PKR</td>
+              <td class="text-primary font-bold">{{ profit() | number }} PKR</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

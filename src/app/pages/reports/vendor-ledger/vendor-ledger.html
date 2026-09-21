@@ -1,0 +1,281 @@
+<!-- src/app/pages/reports/vendor-ledger/vendor-ledger.html -->
+
+<div class="customer-page-container">
+  
+  <!-- TOP HEADER BANNER -->
+  <div class="invoice-top-banner">
+    <div class="banner-left">
+      <div class="header-badge-icon">
+        <i class="fa-solid fa-book"></i>
+      </div>
+      <div>
+        <h2>Vendor Ledger</h2>
+      </div>
+    </div>
+    <div class="banner-actions">
+      <!-- Pay Vendor Button (Green) -->
+      <button class="btn-pay-vendor" type="button" (click)="openPaymentModal()">
+        <i class="fa-solid fa-hand-holding-dollar"></i> Make Payment
+      </button>
+
+      <button class="import-excel-btn" type="button" (click)="exportLedger()">
+        <i class="fa-solid fa-file-excel"></i> Export Ledger
+      </button>
+    </div>
+  </div>
+
+  <!-- FULL-WIDTH TABLE/GRID SECTION -->
+  <div class="full-width-table-section">
+    <div class="table-container">
+      
+      <!-- Toolbar -->
+      <div class="table-header-toolbar">
+        <div class="table-title">
+          <i class="fa-solid fa-list-ul"></i>
+          <span>Vendor Transaction History</span>
+          <span class="result-count">{{ filteredVendors.length }} records</span>
+        </div>
+        
+        <!-- Right Side: Search + Toggle -->
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <div class="search-wrapper" style="position: relative; width: 200px;">
+            <i class="fa-solid fa-search search-icon" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+            <input
+              type="text"
+              class="search-input"
+              [(ngModel)]="searchQuery"
+              placeholder="Search vendor..."
+              style="padding-left: 34px; width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px 8px 34px; outline: none; transition: 0.2s;"
+            >
+          </div>
+
+          <!-- 🆕 VIEW TOGGLE BUTTON -->
+          <button class="toolbar-btn" (click)="toggleView()">
+            <i class="fa-solid" [ngClass]="{'fa-table-cells': isGridView(), 'fa-table': !isGridView()}"></i>
+            {{ isGridView() ? 'Grid View' : 'List View' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- ================== LIST VIEW (Table) ================== -->
+      <div *ngIf="!isGridView()" class="table-responsive">
+        <table class="receipt-table">
+          <thead>
+            <tr>
+              <th style="width: 40px;">#</th>
+              <th>Vendor</th>
+              <th>Total Debits (Purchases)</th>
+              <th>Total Credits (Payments)</th>
+              <th>Outstanding Balance</th>
+              <th style="width: 80px;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let vendor of filteredVendors; let i = index"
+              [class.selected]="selectedVendor?.id === vendor.id"
+              (click)="selectVendor(vendor)"
+              style="cursor: pointer;"
+            >
+              <td>{{ i + 1 }}</td>
+              <td>
+                <div class="receipt-cell">
+                  <div class="receipt-avatar" style="background: linear-gradient(135deg, #d97706, #b45309);">{{ getInitials(vendor.name) }}</div>
+                  <div>
+                    <div class="receipt-name">{{ vendor.name }}</div>
+                    <div style="font-size: 11px; color: #64748b;">{{ vendor.contact }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="text-danger font-bold">₨ {{ vendor.totalDebit | number }}</td>
+              <td class="text-success font-bold">₨ {{ vendor.totalCredit | number }}</td>
+              <td>
+                <span class="font-bold" [ngClass]="{'text-danger': vendor.balance > 0, 'text-success': vendor.balance <= 0}">
+                  ₨ {{ vendor.balance | number }}
+                </span>
+              </td>
+              <td>
+                <button class="action-btn" (click)="$event.stopPropagation(); selectVendor(vendor)">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="filteredVendors.length === 0">
+              <td colspan="6" class="empty-state">
+                <i class="fa-solid fa-inbox"></i>
+                <p>No vendors found matching your search.</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ================== GRID VIEW (Cards) ================== -->
+      <div *ngIf="isGridView()" class="receipt-grid">
+        <div 
+          class="receipt-grid-card" 
+          *ngFor="let vendor of filteredVendors"
+          [class.selected]="selectedVendor?.id === vendor.id"
+          (click)="selectVendor(vendor)"
+        >
+          <div class="grid-card-header">
+            <div class="grid-card-avatar" style="background: linear-gradient(135deg, #d97706, #b45309);">{{ getInitials(vendor.name) }}</div>
+            <span class="grid-card-status" [ngClass]="{
+              'status-pending': vendor.balance > 0,
+              'status-cleared': vendor.balance <= 0
+            }">
+              {{ vendor.balance > 0 ? 'Owed' : 'Prepaid' }}
+            </span>
+          </div>
+          <div class="grid-card-body">
+            <h4>{{ vendor.name }}</h4>
+            <span class="grid-card-sub">{{ vendor.contact }}</span>
+            <div class="grid-card-details">
+              <p><i class="fa-solid fa-arrow-down"></i> Purchases: <span class="text-danger">₨ {{ vendor.totalDebit | number }}</span></p>
+              <p><i class="fa-solid fa-arrow-up"></i> Payments: <span class="text-success">₨ {{ vendor.totalCredit | number }}</span></p>
+              <p style="font-weight: 700; border-top: 1px solid #f1f5f9; padding-top: 8px; margin-top: 8px;">
+                Balance: 
+                <span [ngClass]="{'text-danger': vendor.balance > 0, 'text-success': vendor.balance <= 0}">
+                  ₨ {{ vendor.balance | number }}
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="filteredVendors.length === 0" class="empty-state-grid">
+          <i class="fa-solid fa-inbox"></i>
+          <p>No vendors found</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DETAIL SECTION -->
+  <div class="detail-section" *ngIf="selectedVendor">
+    <div class="detail-section-header">
+      <div class="detail-section-title">
+        <div class="detail-avatar" style="background: linear-gradient(135deg, #d97706, #b45309);">{{ getInitials(selectedVendor.name) }}</div>
+        <div>
+          <h3>{{ selectedVendor.name }}</h3>
+          <p>{{ selectedVendor.phone || 'No Phone' }} | {{ selectedVendor.contact }}</p>
+        </div>
+      </div>
+      
+      <div style="display: flex; gap: 12px;">
+        <button class="btn-action" (click)="printLedger()" style="border: 1px solid #e2e8f0; background: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+          <i class="fa-solid fa-print"></i> Print Ledger
+        </button>
+      </div>
+    </div>
+
+    <div class="detail-tab-content">
+      
+      <!-- PREMIUM CAPSULE AGING BANNER -->
+      <div class="voucher-status-banner" [ngClass]="{
+        'banner-bounced': selectedVendor.balance > 0,
+        'banner-cleared': selectedVendor.balance <= 0
+      }" style="margin-bottom: 20px; padding: 20px; flex-direction: column; align-items: stretch;">
+        
+        <!-- Top Row: Status Title & Net Balance -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div>
+            <span class="banner-label">OUTSTANDING STATUS</span>
+            <h3 style="margin: 2px 0 0 0; font-size: 16px;">
+              {{ selectedVendor.balance > 0 ? 'Amount Owed to Vendor' : 'Vendor is Prepaid / Credited' }}
+            </h3>
+          </div>
+          <div class="banner-amount" style="text-align: right;">
+            <span class="banner-label">NET BALANCE</span>
+            <h2 style="margin: 2px 0 0 0; font-size: 20px;" [ngClass]="{'text-danger': selectedVendor.balance > 0, 'text-success': selectedVendor.balance <= 0}">
+              ₨ {{ selectedVendor.balance | number }}
+            </h2>
+          </div>
+        </div>
+
+        <!-- OX / CAPSULE SHAPE AGING BAR -->
+        <div style="background: transparent; border-radius: 50px; height: 34px; display: flex; gap: 4px; overflow: hidden;">
+          
+          <!-- 0-30 Days (Green Capsule) -->
+          <div style="flex: 1; background: #dcfce7; border-radius: 50px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #166534;">
+            0-30 Days
+            <span style="margin-left: 6px; font-weight: 400; background: rgba(255,255,255,0.4); padding: 0 6px; border-radius: 12px;">Rs 0</span>
+          </div>
+
+          <!-- 31-60 Days (Orange Capsule) -->
+          <div style="flex: 1; background: #fef3c7; border-radius: 50px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #92400e;">
+            31-60 Days
+            <span style="margin-left: 6px; font-weight: 400; background: rgba(255,255,255,0.4); padding: 0 6px; border-radius: 12px;">Rs 5,000</span>
+          </div>
+
+          <!-- 60+ Days (Red Capsule) -->
+          <div style="flex: 2; background: #fee2e2; border-radius: 50px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #991b1b;">
+            <i class="fa-solid fa-triangle-exclamation" style="margin-right: 6px;"></i>
+            60+ Days
+            <span style="margin-left: 6px; font-weight: 400; background: rgba(255,255,255,0.4); padding: 0 6px; border-radius: 12px;">Rs 10,000</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Transaction History Table -->
+      <div class="info-card-section">
+        <div class="section-card-title">
+          <i class="fa-solid fa-list-ul"></i> Detailed Transaction History
+        </div>
+        
+        <div class="table-responsive">
+          <table class="receipt-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Reference ID</th>
+                <th>Description</th>
+                <th>Debit (Purchases)</th>
+                <th>Credit (Payments)</th>
+                <th style="text-align: right;">Running Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let tx of selectedVendor.transactions">
+                <td>{{ tx.date }}</td>
+                <td>
+                  <span class="font-bold clickable-invoice" (click)="navigateToPurchase(tx.refId)">
+                    {{ tx.refId }}
+                  </span>
+                </td>
+                <td>{{ tx.description }}</td>
+                <td *ngIf="tx.type === 'debit'" class="text-danger font-bold">₨ {{ tx.amount | number }}</td>
+                <td *ngIf="tx.type !== 'debit'"></td>
+                <td *ngIf="tx.type === 'credit'" class="text-success font-bold">₨ {{ tx.amount | number }}</td>
+                <td *ngIf="tx.type !== 'credit'"></td>
+                <td style="text-align: right; font-weight: 700;">₨ {{ tx.balance | number }}</td>
+              </tr>
+              <tr *ngIf="selectedVendor.transactions.length === 0">
+                <td colspan="6" class="empty-state">
+                  <i class="fa-solid fa-inbox"></i>
+                  <p>No transaction history found for this vendor.</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Internal Notes -->
+      <div class="info-card-section" style="margin-top: 16px;">
+        <div class="section-card-title">
+          <i class="fa-solid fa-pen-to-square"></i> Internal Notes
+        </div>
+        <div style="background: #f8fafc; border-radius: 8px; padding: 12px; border: 1px solid #f1f5f9;">
+          <p style="color: #475569; font-size: 13px; margin: 0;">
+            <em>No notes added for this vendor yet. Click to add a note regarding payment terms...</em>
+          </p>
+          <button style="margin-top: 8px; border: none; background: white; padding: 4px 12px; border-radius: 4px; border: 1px solid #e2e8f0; font-size: 12px; cursor: pointer;">+ Add Note</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,267 @@
+<!-- src/app/pages/sales/cheques/cheques.html -->
+
+<div class="customer-page-container">
+  <!-- Top Header Banner -->
+  <div class="invoice-top-banner">
+    <div class="banner-left">
+      <div class="header-badge-icon">
+        <i class="fa-solid fa-money-check-dollar"></i>
+      </div>
+      <div>
+        <h2>Customer Cheques Management</h2>
+      </div>
+    </div>
+    <div class="banner-actions">
+      <button class="create-customer-btn" type="button" (click)="openCreateModal()">
+        <i class="fa-solid fa-plus"></i> Add New Cheque
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Workspace Grid (Master List + Detail View) -->
+  <div class="customer-module-layout">
+    
+    <!-- MASTER PANE: Cheque List -->
+    <div class="master-pane">
+      
+      <!-- Professional Segmented Control Filter -->
+      <div class="segmented-control-wrapper" style="padding: 12px 16px; border-bottom: 1px solid #f1f5f9;">
+        <div class="segmented-control">
+          <button class="segmented-btn" [class.active]="chequeTypeFilter === 'All'" (click)="chequeTypeFilter = 'All'">All Cheques</button>
+          <button class="segmented-btn" [class.active]="chequeTypeFilter === 'Incoming'" (click)="chequeTypeFilter = 'Incoming'">Incoming</button>
+          <button class="segmented-btn" [class.active]="chequeTypeFilter === 'Outgoing'" (click)="chequeTypeFilter = 'Outgoing'">Outgoing</button>
+        </div>
+      </div>
+
+      <div class="filter-bar-header">
+        <span>CHEQUE RECORDS</span>
+        <select class="filter-select-box" [(ngModel)]="statusFilter" (ngModelChange)="currentPage = 1">
+          <option value="All">All Statuses</option>
+          <option value="In Hand">In Hand</option>
+          <option value="Deposited">Deposited</option>
+          <option value="Cleared">Cleared</option>
+          <option value="Bounced">Bounced</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+      </div>
+
+      <div class="search-box-wrapper">
+        <input type="text" class="list-search-input" [(ngModel)]="searchQuery" (ngModelChange)="currentPage = 1" placeholder="Search by cheque #, client, bank...">
+      </div>
+
+      <!-- LIST SCROLL CONTAINER -->
+      <div class="list-scroll-container">
+        <div 
+          *ngFor="let item of paginatedCheques" 
+          class="customer-card-item" 
+          [class.selected]="item.id === selectedCheque?.id" 
+          (click)="selectCheque(item)"
+        >
+          <div class="item-top-row">
+            <div class="avatar-sm">{{ getInitials(item.clientName) }}</div>
+            <div class="item-info">
+              <div class="card-item-title">{{ item.chequeNumber }}</div>
+              <div class="card-item-sub">{{ item.clientName }} • {{ item.bankName }}</div>
+            </div>
+            <!-- Aligned Amount & Status -->
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+              <span class="item-amount">PKR {{ item.amount | number }}</span>
+              <span class="badge" [ngClass]="{
+                'badge-cleared': item.status === 'Cleared',
+                'badge-bounced': item.status === 'Bounced',
+                'badge-deposited': item.status === 'Deposited',
+                'badge-inhand': item.status === 'In Hand'
+              }">{{ item.status }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div *ngIf="paginatedCheques.length === 0" class="no-records">
+          <i class="fa-solid fa-folder-open"></i>
+          <p>No cheques found</p>
+        </div>
+      </div>
+
+      <!-- Pagination Footer -->
+      <div class="pagination-footer">
+        <button class="page-nav-btn" type="button" (click)="prevPage()" [disabled]="currentPage === 1">&lt; Back</button>
+        <div class="page-numbers">
+          <span class="page-num" *ngFor="let p of getPageNumbers()" 
+                [class.active]="currentPage === p" 
+                (click)="goToPage(p)">
+            {{ p }}
+          </span>
+        </div>
+        <button class="page-nav-btn" type="button" (click)="nextPage()" [disabled]="currentPage === totalPages">Next &gt;</button>
+      </div>
+    </div>
+
+    <!-- DETAIL PANE: Read-Only Executive Voucher View -->
+    <div class="detail-pane" *ngIf="selectedCheque; else noSelection">
+      <div class="detail-header-bar">
+        <div class="client-title-block">
+          <div class="avatar-lg">
+            <i class="fa-solid fa-money-check-dollar"></i>
+          </div>
+          <div>
+            <h2>{{ selectedCheque.chequeNumber }}</h2>
+            <p>{{ selectedCheque.chequeType }} Cheque | Issuer: {{ selectedCheque.clientName }}</p>
+          </div>
+        </div>
+        <div class="detail-actions">
+          <button class="btn-delete" type="button" (click)="deleteCheque()">
+            <i class="fa-solid fa-trash"></i> Delete
+          </button>
+          <button class="create-customer-btn" type="button" (click)="openEditModal()">
+            <i class="fa-solid fa-pen-to-square"></i> Edit Cheque
+          </button>
+        </div>
+      </div>
+
+      <div class="workspace-scrollable-content">
+        <!-- Status Banner -->
+        <div class="voucher-status-banner" [ngClass]="{
+          'banner-cleared': selectedCheque.status === 'Cleared',
+          'banner-bounced': selectedCheque.status === 'Bounced',
+          'banner-deposited': selectedCheque.status === 'Deposited',
+          'banner-inhand': selectedCheque.status === 'In Hand'
+        }">
+          <div>
+            <span class="banner-label">CURRENT STATUS</span>
+            <h3>{{ selectedCheque.status }}</h3>
+          </div>
+          <div class="banner-amount">
+            <span class="banner-label">AMOUNT</span>
+            <h2>{{ selectedCheque.amount | number }} PKR</h2>
+          </div>
+        </div>
+
+        <!-- Detailed Voucher Grid -->
+        <div class="info-card-section">
+          <div class="section-card-title">
+            <i class="fa-solid fa-file-invoice-dollar"></i> Transaction Summary
+          </div>
+          <div class="voucher-grid">
+            <div class="voucher-item">
+              <span class="v-label">Client / Issuer</span>
+              <span class="v-value">{{ selectedCheque.clientName }}</span>
+            </div>
+            <div class="voucher-item">
+              <span class="v-label">Payee / Beneficiary</span>
+              <span class="v-value">{{ selectedCheque.payeeName || 'N/A' }}</span>
+            </div>
+            <div class="voucher-item">
+              <span class="v-label">Bank Name</span>
+              <span class="v-value">{{ selectedCheque.bankName }}</span>
+            </div>
+            <div class="voucher-item">
+              <span class="v-label">Linked Invoice</span>
+              <span class="v-value text-blue clickable-invoice" (click)="navigateToInvoice(selectedCheque.linkedInvoice)" title="View Invoice Details">
+                {{ selectedCheque.linkedInvoice || 'None' }} 
+                <i class="fa-solid fa-arrow-up-right-from-square" *ngIf="selectedCheque.linkedInvoice" style="font-size: 10px; margin-left: 4px;"></i>
+              </span>
+            </div>
+            <div class="voucher-item">
+              <span class="v-label">Cheque Date</span>
+              <span class="v-value">{{ selectedCheque.chequeDate }}</span>
+            </div>
+            <div class="voucher-item">
+              <span class="v-label">Deposit Date</span>
+              <span class="v-value">{{ selectedCheque.depositDate || 'Not Deposited' }}</span>
+            </div>
+            <div class="voucher-item full-width" *ngIf="selectedCheque.remarks">
+              <span class="v-label">Remarks / Notes</span>
+              <span class="v-value">{{ selectedCheque.remarks }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noSelection>
+      <div class="detail-pane no-selection-state">
+        <i class="fa-solid fa-money-check-dollar"></i>
+        <h3>No Cheque Selected</h3>
+        <p>Select a cheque record from the list on the left to view its summary voucher.</p>
+      </div>
+    </ng-template>
+
+  </div>
+
+  <!-- EDIT / CREATE MODAL -->
+  <div *ngIf="showModal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header-bar">
+        <h3>{{ isEditMode ? 'Edit Cheque Record' : 'Add New Cheque Record' }}</h3>
+        <button class="modal-close-btn" type="button" (click)="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body-content">
+        <div class="form-grid-2">
+          
+          <!-- Professional Cheque Type Segmented Control -->
+          <div class="form-group full-width" style="margin-bottom: 8px;">
+            <label style="display: block; margin-bottom: 6px;">CHEQUE TYPE</label>
+            <div class="segmented-control" style="width: 100%; justify-content: flex-start;">
+              <button class="segmented-btn" [class.active]="activeCheque.chequeType === 'Incoming'" (click)="activeCheque.chequeType = 'Incoming'">Incoming (Customer)</button>
+              <button class="segmented-btn" [class.active]="activeCheque.chequeType === 'Outgoing'" (click)="activeCheque.chequeType = 'Outgoing'">Outgoing (Vendor)</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>CHEQUE NUMBER</label>
+            <input type="text" class="input-ctrl" [(ngModel)]="activeCheque.chequeNumber" placeholder="e.g. CHQ-10045">
+          </div>
+          <div class="form-group">
+            <label>AMOUNT (PKR)</label>
+            <input type="number" class="input-ctrl" [(ngModel)]="activeCheque.amount" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label>CLIENT / ISSUER NAME</label>
+            <input type="text" class="input-ctrl" [(ngModel)]="activeCheque.clientName" placeholder="Client or agency name">
+          </div>
+          <div class="form-group">
+            <label>PAYEE / BENEFICIARY</label>
+            <input type="text" class="input-ctrl" [(ngModel)]="activeCheque.payeeName" placeholder="Beneficiary name">
+          </div>
+          <div class="form-group">
+            <label>BANK NAME</label>
+            <input type="text" class="input-ctrl" [(ngModel)]="activeCheque.bankName" placeholder="e.g. Meezan Bank, HBL">
+          </div>
+          <div class="form-group">
+            <label>CHEQUE DATE</label>
+            <input type="date" class="input-ctrl" [(ngModel)]="activeCheque.chequeDate">
+          </div>
+          <div class="form-group">
+            <label>DEPOSIT DATE</label>
+            <input type="date" class="input-ctrl" [(ngModel)]="activeCheque.depositDate">
+          </div>
+          <div class="form-group">
+            <label>LINKED INVOICE #</label>
+            <input type="text" class="input-ctrl" [(ngModel)]="activeCheque.linkedInvoice" placeholder="e.g. INV-2026-089">
+          </div>
+          
+          <!-- Professional Status Segmented Control (Replaced dropdown) -->
+          <div class="form-group">
+            <label>STATUS</label>
+            <div class="segmented-control" style="width: 100%; justify-content: flex-start; margin-top: 4px;">
+              <button class="segmented-btn" [class.active]="activeCheque.status === 'In Hand'" (click)="activeCheque.status = 'In Hand'">In Hand</button>
+              <button class="segmented-btn" [class.active]="activeCheque.status === 'Deposited'" (click)="activeCheque.status = 'Deposited'">Deposited</button>
+              <button class="segmented-btn" [class.active]="activeCheque.status === 'Cleared'" (click)="activeCheque.status = 'Cleared'">Cleared</button>
+              <button class="segmented-btn" style="color: #dc2626;" [class.active]="activeCheque.status === 'Bounced'" (click)="activeCheque.status = 'Bounced'">Bounced</button>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label>REMARKS / BOUNCE REASON</label>
+            <textarea class="textarea-ctrl" rows="3" [(ngModel)]="activeCheque.remarks" placeholder="Optional notes or clearance details..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer-bar">
+        <button type="button" class="btn-cancel" (click)="closeModal()">Cancel</button>
+        <button type="button" class="btn-save" (click)="saveChequeData()">{{ isEditMode ? 'Update Changes' : 'Save Cheque' }}</button>
+      </div>
+    </div>
+  </div>
+
+</div>

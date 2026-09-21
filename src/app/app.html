@@ -1,0 +1,93 @@
+<!-- src/app/app.html -->
+
+<!-- LOGIN PAGE OUTLET -->
+<router-outlet *ngIf="isLoginPage"></router-outlet>
+
+<!-- APPLICATION SHELL (Sidebar + Main Content) -->
+<div class="app-shell" *ngIf="!isLoginPage">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" 
+         (click)="$event.stopPropagation()" 
+         [class.is-collapsed]="!isSidebarOpen">
+    
+    <div class="sidebar-main">
+      
+      <!-- Brand Header -->
+      <div class="brand">
+        
+        <!-- Plane Logo is now the Collapse/Expand Trigger -->
+        <div class="brand-mark" (click)="toggleSidebar()">
+          <i class="fa-solid fa-plane"></i>
+        </div>
+
+        <div class="brand-copy">
+          <strong>TRAVIXO</strong>
+          <span>MANAGEMENT SYSTEM</span>
+        </div>
+        
+        <!-- Collapse Button (Shows ONLY when the sidebar is Expanded) -->
+        <button type="button" class="sidebar-toggle expanded-toggle" (click)="toggleSidebar()" *ngIf="isSidebarOpen">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+
+      </div>
+
+      <!-- Main Navigation List -->
+      <nav class="main-menu" aria-label="Main navigation">
+        <ng-container *ngFor="let section of navSections">
+
+          <!-- Skip rendering Log Out in the top scrollable list -->
+          <ng-container *ngIf="section.label !== 'Log Out'">
+            <div class="menu-item-wrapper">
+
+              <!-- Main Module Button -->
+              <button
+                class="main-menu-item"
+                type="button"
+                [class.active]="isSectionActive(section) || activeSection?.label === section.label"
+                (click)="selectSection(section)"
+              >
+                <span class="main-icon"><i [class]="section.icon"></i></span>
+                <span>{{ section.label }}</span>
+                <i *ngIf="section.children" class="fa-solid fa-chevron-down chevron" [class.rotate]="activeSection?.label === section.label"></i>
+              </button>
+
+              <!-- Inline Accordion Submenu -->
+              <div class="inline-submenu" *ngIf="section.children && activeSection?.label === section.label">
+                <a
+                  *ngFor="let child of section.children"
+                  [routerLink]="child.route"
+                  routerLinkActive="active"
+                  class="submenu-link"
+                  (click)="$event.stopPropagation()"
+                >
+                  <span><i [class]="child.icon"></i></span>
+                  <div>
+                    <strong>{{ child.label }}</strong>
+                  </div>
+                </a>
+              </div>
+
+            </div>
+          </ng-container>
+
+        </ng-container>
+      </nav>
+    </div>
+
+    <!-- Sidebar Footer: Pinned Log Out Button -->
+    <footer class="sidebar-footer">
+      <button class="main-menu-item logout-btn" type="button" (click)="logout()">
+        <span class="main-icon"><i class="fa-solid fa-right-from-bracket"></i></span>
+        <span>Log Out</span>
+      </button>
+    </footer>
+  </aside>
+
+  <!-- MAIN VIEWPORT -->
+  <main class="main-viewport">
+    <router-outlet (activate)="scrollToTop()"></router-outlet>
+  </main>
+
+</div>

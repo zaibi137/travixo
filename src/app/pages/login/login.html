@@ -1,0 +1,171 @@
+<main class="login-page">
+  <section class="login-panel">
+    <div class="brand-block">
+      <div class="brand-mark">
+        <i class="fa-solid fa-plane"></i> 
+      </div>
+      <div>
+        <strong>TRAVIXO</strong>
+        <span>WORLD TOURS PLAN</span>
+      </div>
+    </div>
+
+    <!-- VIEW 1: REGULAR LOGIN FORM -->
+    <ng-container *ngIf="view() === 'login'">
+      <div class="login-copy">
+        <h1>Welcome Back</h1>
+      </div>
+
+      <form class="login-form" (ngSubmit)="submit()">
+        <label>
+          <span>Email</span>
+          <div>
+            <i class="fa-solid fa-envelope"></i>
+            <input name="userId" type="email" [ngModel]="userId()" (ngModelChange)="userId.set($event)" autocomplete="username" placeholder="name@example.com">
+          </div>
+        </label>
+
+        <label>
+          <span>Password</span>
+          <div style="position: relative; display: flex; align-items: center;">
+            <i class="fa-solid fa-lock"></i>
+            <input name="password" [type]="showPassword() ? 'text' : 'password'" [ngModel]="password()" (ngModelChange)="password.set($event)" autocomplete="current-password" placeholder="••••••••" style="padding-right: 40px; width: 100%;">
+            <i class="fa-solid" [ngClass]="showPassword() ? 'fa-eye-slash' : 'fa-eye'" (click)="togglePasswordVisibility()" style="cursor: pointer; position: absolute; right: 15px; color: #a0aec0; font-size: 13px;"></i>
+          </div>
+        </label>
+
+        <div class="form-actions">
+          <a href="javascript:void(0)" class="forgot-link" (click)="toggleForgotPassword()">Forgot Password?</a>
+        </div>
+
+        <p class="success-message" *ngIf="resetMessage()">{{ resetMessage() }}</p>
+        <p class="error-message" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+
+        <button type="submit" [disabled]="isLoading()">
+          <i class="fa-solid" [ngClass]="isLoading() ? 'fa-spinner' : 'fa-right-to-bracket'"></i>
+          {{ isLoading() ? 'Logging in...' : 'Login' }}
+        </button>
+      </form>
+    </ng-container>
+
+    <!-- VIEW 2: FORGOT PASSWORD — USER CODE & EMAIL STEP -->
+    <ng-container *ngIf="view() === 'forgotPassword'">
+      <div class="login-copy">
+        <span>Password Recovery</span>
+        <h1>Reset Password</h1>
+        <p>Enter your registered user code and email address and we will send you a verification code.</p>
+      </div>
+
+      <form class="login-form" (ngSubmit)="submitForgotPassword()">
+        <label>
+          <span>User Code</span>
+          <div>
+            <i class="fa-solid fa-user"></i>
+            <input name="resetUserCode" type="text" [ngModel]="resetUserCode()" (ngModelChange)="resetUserCode.set($event)" placeholder="Enter User Code" required>
+          </div>
+        </label>
+
+        <label>
+          <span>Email Address</span>
+          <div>
+            <i class="fa-solid fa-envelope"></i>
+            <input name="resetEmail" type="email" [ngModel]="resetEmail()" (ngModelChange)="resetEmail.set($event)" placeholder="name@example.com" required>
+          </div>
+        </label>
+
+        <p class="error-message" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+
+        <button type="submit" [disabled]="isSendingReset()">
+          <i class="fa-solid" [ngClass]="isSendingReset() ? 'fa-spinner' : 'fa-paper-plane'"></i>
+          {{ isSendingReset() ? 'Sending...' : 'Send Reset Code' }}
+        </button>
+
+        <button type="button" class="btn-secondary" (click)="backToLogin()">
+          <i class="fa-solid fa-arrow-left"></i>
+          Back to Login
+        </button>
+      </form>
+    </ng-container>
+
+    <!-- VIEW 3: OTP ENTRY -->
+    <ng-container *ngIf="view() === 'otpEntry'">
+      <div class="login-copy">
+        <h1>Enter OTP</h1>
+        <p>We sent a {{ otpLength }}-digit code to <strong>{{ resetEmail() }}</strong></p>
+      </div>
+
+      <form class="login-form" (ngSubmit)="verifyOtp()">
+        <div class="otp-group" (paste)="onOtpPaste($event)">
+          <input
+            *ngFor="let digit of otpDigits(); let i = index; trackBy: trackByIndex"
+            class="otp-box"
+            type="text"
+            inputmode="numeric"
+            maxlength="1"
+            [value]="digit"
+            (input)="onOtpInput($event, i)"
+            (keydown)="onOtpKeydown($event, i)">
+        </div>
+
+        <div class="form-actions otp-resend">
+          <a href="javascript:void(0)" class="forgot-link" (click)="resendOtp()">Resend Code</a>
+        </div>
+
+        <p class="success-message" *ngIf="resetMessage()">{{ resetMessage() }}</p>
+        <p class="error-message" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+
+        <button type="submit">
+          <i class="fa-solid fa-check"></i>
+          Verify Code
+        </button>
+
+        <button type="button" class="btn-secondary" (click)="backToLogin()">
+          <i class="fa-solid fa-arrow-left"></i>
+          Back to Login
+        </button>
+      </form>
+    </ng-container>
+
+    <!-- VIEW 4: NEW PASSWORD -->
+    <ng-container *ngIf="view() === 'newPassword'">
+      <div class="login-copy">
+        <span>Set New Password</span>
+        <h1>Create New Password</h1>
+        <p>Enter your new password below. If your code is invalid, the error will be shown after you submit.</p>
+      </div>
+
+      <form class="login-form" (ngSubmit)="submitResetPassword()">
+        <label>
+          <span>New Password</span>
+          <div style="position: relative; display: flex; align-items: center;">
+            <i class="fa-solid fa-lock"></i>
+            <input name="newPassword" [type]="showNewPassword() ? 'text' : 'password'" [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)" placeholder="At least 6 characters" style="padding-right: 40px; width: 100%;">
+            <i class="fa-solid" [ngClass]="showNewPassword() ? 'fa-eye-slash' : 'fa-eye'" (click)="toggleNewPasswordVisibility()" style="cursor: pointer; position: absolute; right: 15px; color: #a0aec0; font-size: 13px;"></i>
+          </div>
+        </label>
+
+        <label>
+          <span>Confirm New Password</span>
+          <div style="position: relative; display: flex; align-items: center;">
+            <i class="fa-solid fa-lock"></i>
+            <input name="confirmPassword" [type]="showConfirmPassword() ? 'text' : 'password'" [ngModel]="confirmPassword()" (ngModelChange)="confirmPassword.set($event)" placeholder="Re-enter new password" style="padding-right: 40px; width: 100%;">
+            <i class="fa-solid" [ngClass]="showConfirmPassword() ? 'fa-eye-slash' : 'fa-eye'" (click)="toggleConfirmPasswordVisibility()" style="cursor: pointer; position: absolute; right: 15px; color: #a0aec0; font-size: 13px;"></i>
+          </div>
+        </label>
+
+        <p class="error-message" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+
+        <button type="submit" [disabled]="isResettingPassword()">
+          <i class="fa-solid" [ngClass]="isResettingPassword() ? 'fa-spinner' : 'fa-check'"></i>
+          {{ isResettingPassword() ? 'Resetting...' : 'Reset Password' }}
+        </button>
+
+        <button type="button" class="btn-secondary" (click)="view.set('otpEntry')">
+          <i class="fa-solid fa-arrow-left"></i>
+          Back to OTP
+        </button>
+      </form>
+    </ng-container>
+
+  </section>
+</main>

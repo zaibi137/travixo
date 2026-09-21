@@ -1,0 +1,656 @@
+<!-- src/app/pages/expense-allocation/expense-allocation.html -->
+
+<div class="expense-page-container">
+
+  <!-- TOP BANNER - Full Width -->
+  <div class="expense-top-banner">
+    <div class="banner-left">
+      <div class="header-badge-icon">
+        <i class="fa-solid fa-table-cells"></i>
+      </div>
+      <div>
+        <h2>Expense Allocation</h2>
+      </div>
+    </div>
+    <div class="banner-actions">
+      <button class="btn-export" type="button" (click)="exportData()">
+        <i class="fa-solid fa-download"></i> Export
+      </button>
+      <button class="banner-print-btn" type="button" (click)="printData()">
+        <i class="fa-solid fa-print"></i> Print
+      </button>
+      <button class="create-expense-btn" type="button" (click)="openCreateModal()">
+        <i class="fa-solid fa-plus"></i> New Allocation
+      </button>
+    </div>
+  </div>
+
+  <!-- TWO-COLUMN TOP SECTION -->
+  <div class="two-column-top">
+
+    <!-- LEFT COLUMN: Search & Filters -->
+    <div class="filter-column">
+      <div class="filter-card">
+        <div class="search-wrapper">
+          <i class="fa-solid fa-search search-icon"></i>
+          <input
+            type="text"
+            class="search-input"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="applyFilters()"
+            placeholder="Search by #, description, client..."
+          >
+          <button class="clear-search" *ngIf="searchQuery" (click)="searchQuery = ''; applyFilters()">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Expense Type</label>
+            <select class="filter-select" [(ngModel)]="expenseTypeFilter" (ngModelChange)="applyFilters()">
+              <option value="All">All Types</option>
+              <option value="Direct">📌 Direct</option>
+              <option value="Indirect">🏢 Indirect</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Status</label>
+            <select class="filter-select" [(ngModel)]="statusFilter" (ngModelChange)="applyFilters()">
+              <option value="All">All Status</option>
+              <option value="Pending">⏳ Pending</option>
+              <option value="Approved">✅ Approved</option>
+              <option value="Rejected">❌ Rejected</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Department</label>
+            <select class="filter-select" [(ngModel)]="departmentFilter" (ngModelChange)="applyFilters()">
+              <option value="All">All Departments</option>
+              <option *ngFor="let dept of getUniqueDepartments()" [value]="dept">
+                {{ dept }}
+              </option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Allocation Type</label>
+            <select class="filter-select" [(ngModel)]="allocationTypeFilter" (ngModelChange)="applyFilters()">
+              <option value="All">All Allocation Types</option>
+              <option value="Client">👤 Client</option>
+              <option value="Department">🏢 Department</option>
+              <option value="Branch">📍 Branch</option>
+              <option value="Project">📋 Project</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="quick-filters">
+          <span class="quick-filter-label">Quick Filters:</span>
+          <button
+            class="filter-chip"
+            *ngFor="let chip of filterChips"
+            [class.active]="statusFilter === chip.value"
+            (click)="statusFilter = chip.value; applyFilters()">
+            {{ chip.icon }} {{ chip.label }}
+          </button>
+          <button
+            class="filter-chip reset-chip"
+            *ngIf="statusFilter !== 'All' || expenseTypeFilter !== 'All' || searchQuery"
+            (click)="clearAllFilters()">
+            <i class="fa-solid fa-rotate"></i> Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Stats Cards -->
+    <div class="stats-column">
+      <div class="stats-grid">
+        <div class="stat-card total">
+          <div class="stat-icon">
+            <i class="fa-solid fa-receipt"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Allocations</span>
+            <span class="stat-value">{{ allocations.length }}</span>
+          </div>
+        </div>
+
+        <div class="stat-card pending">
+          <div class="stat-icon">
+            <i class="fa-solid fa-clock"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Pending</span>
+            <span class="stat-value">{{ getPendingCount() }}</span>
+          </div>
+        </div>
+
+        <div class="stat-card approved">
+          <div class="stat-icon">
+            <i class="fa-solid fa-check-circle"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Approved</span>
+            <span class="stat-value">{{ getApprovedCount() }}</span>
+          </div>
+        </div>
+
+        <div class="stat-card amount">
+          <div class="stat-icon">
+            <i class="fa-solid fa-money-bill-wave"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Amount</span>
+            <span class="stat-value">₨ {{ getTotalAmount() | number }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FULL-WIDTH MIDDLE SECTION: Allocation Table -->
+  <div class="full-width-table-section">
+    <div class="table-container">
+      <div class="table-header-toolbar">
+        <div class="table-title">
+          <i class="fa-solid fa-list-ul"></i>
+          <span>Allocation Directory</span>
+          <span class="result-count">{{ filteredAllocations.length }} results</span>
+        </div>
+        <div class="table-toolbar-actions">
+          <span class="total-amount-summary">
+            Total Allocated: <strong>₨ {{ getFilteredTotal() | number }}</strong>
+          </span>
+        </div>
+      </div>
+
+      <!-- Table View -->
+      <div class="table-responsive">
+        <table class="expense-table">
+          <thead>
+            <tr>
+              <th style="width: 30px;">#</th>
+              <th>EA #</th>
+              <th>Date</th>
+              <th>Description</th>
+              <th>Type</th>
+              <th>Allocated To</th>
+              <th>Department</th>
+              <th>Amount (PKR)</th>
+              <th>Status</th>
+              <th style="width: 80px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let item of paginatedAllocations; let i = index"
+              [class.selected]="item.id === selectedAllocation?.id"
+              (click)="selectAllocation(item)">
+              <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+              <td>
+                <div class="ea-cell">
+                  <span class="ea-number">{{ item.allocationNumber }}</span>
+                </div>
+              </td>
+              <td>{{ item.expenseDate | date:'dd MMM yyyy' }}</td>
+              <td>
+                <div class="desc-cell">
+                  <span class="desc-text">{{ item.description }}</span>
+                  <span class="desc-category">{{ item.expenseCategory }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="type-badge" [ngClass]="item.expenseType === 'Direct' ? 'type-direct' : 'type-indirect'">
+                  {{ item.expenseType }}
+                </span>
+              </td>
+              <td>
+                <div class="allocated-cell">
+                  <span class="allocated-name">{{ item.allocatedToName }}</span>
+                  <span class="allocated-type">{{ item.allocationType }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="dept-badge">{{ item.department }}</span>
+              </td>
+              <td class="amount-total">₨ {{ item.amount | number }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="getStatusClass(item.status)">
+                  <span class="status-dot"></span>
+                  {{ item.status }}
+                </span>
+              </td>
+              <td>
+                <button class="action-btn" (click)="$event.stopPropagation(); selectAllocation(item)">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+                <button class="action-btn edit-btn" (click)="$event.stopPropagation(); openEditModal(item)">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="paginatedAllocations.length === 0">
+              <td colspan="10" class="empty-state">
+                <i class="fa-solid fa-inbox"></i>
+                <p>No allocations found matching your criteria</p>
+                <button class="clear-filters-btn" (click)="clearAllFilters()">Clear Filters</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="table-footer">
+        <div class="pagination-info">
+          Showing {{ (currentPage - 1) * pageSize + 1 }} -
+          {{ Math.min(currentPage * pageSize, filteredAllocations.length) }}
+          of {{ filteredAllocations.length }} allocations
+        </div>
+        <div class="pagination-controls">
+          <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <button
+            class="page-btn"
+            *ngFor="let p of getPageNumbers()"
+            [class.active]="currentPage === p"
+            (click)="goToPage(p)">
+            {{ p }}
+          </button>
+          <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+        <div class="page-size-selector">
+          <select [(ngModel)]="pageSize" (ngModelChange)="currentPage = 1">
+            <option value="5">5 per page</option>
+            <option value="10">10 per page</option>
+            <option value="25">25 per page</option>
+            <option value="50">50 per page</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FULL-WIDTH BOTTOM SECTION: Detail Panel -->
+  <div class="full-width-bottom-section" *ngIf="selectedAllocation">
+    <div class="expense-detail-panel">
+      <div class="detail-header">
+        <div class="detail-title">
+          <i class="fa-solid fa-file-invoice"></i>
+          <h3>Allocation Details: {{ selectedAllocation.allocationNumber }}</h3>
+        </div>
+        <div class="detail-actions">
+          <button class="btn-approve" *ngIf="selectedAllocation.status === 'Pending'" (click)="approveAllocation(selectedAllocation)">
+            <i class="fa-solid fa-check"></i> Approve
+          </button>
+          <button class="btn-reject" *ngIf="selectedAllocation.status === 'Pending'" (click)="rejectAllocation(selectedAllocation)">
+            <i class="fa-solid fa-times"></i> Reject
+          </button>
+          <button class="detail-print-btn" (click)="printAllocation(selectedAllocation)">
+            <i class="fa-solid fa-print"></i> Print
+          </button>
+          <button class="detail-delete-btn" (click)="deleteAllocation()">
+            <i class="fa-solid fa-trash"></i> Delete
+          </button>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <!-- Left Column -->
+        <div class="detail-left">
+          <div class="info-card">
+            <div class="info-card-title">
+              <i class="fa-solid fa-info-circle"></i> Expense Information
+            </div>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Allocation #</span>
+                <span class="info-value">{{ selectedAllocation.allocationNumber }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Expense Date</span>
+                <span class="info-value">{{ selectedAllocation.expenseDate | date:'dd MMM yyyy' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Expense Type</span>
+                <span class="info-value">
+                  <span class="type-badge" [ngClass]="selectedAllocation.expenseType === 'Direct' ? 'type-direct' : 'type-indirect'">
+                    {{ selectedAllocation.expenseType }}
+                  </span>
+                </span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Category</span>
+                <span class="info-value">{{ selectedAllocation.expenseCategory }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Description</span>
+                <span class="info-value">{{ selectedAllocation.description }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Amount</span>
+                <span class="info-value amount-highlight">₨ {{ selectedAllocation.amount | number }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-card" style="margin-top: 12px;">
+            <div class="info-card-title">
+              <i class="fa-solid fa-link"></i> Linked References
+            </div>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Purchase #</span>
+                <span class="info-value">{{ selectedAllocation.purchaseId ? 'PO-' + selectedAllocation.purchaseId : '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Invoice #</span>
+                <span class="info-value">{{ selectedAllocation.invoiceId ? 'INV-' + selectedAllocation.invoiceId : '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Client</span>
+                <span class="info-value">{{ selectedAllocation.clientId ? selectedAllocation.allocatedToName : '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Payment Method</span>
+                <span class="info-value">{{ selectedAllocation.paymentMethod }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="detail-right">
+          <div class="info-card allocation-summary">
+            <div class="info-card-title">
+              <i class="fa-solid fa-arrows-split-up-and-left"></i> Allocation Summary
+            </div>
+            <div class="allocation-grid">
+              <div class="allocation-item">
+                <span class="allocation-label">Allocation Type</span>
+                <span class="allocation-value">{{ selectedAllocation.allocationType }}</span>
+              </div>
+              <div class="allocation-item">
+                <span class="allocation-label">Allocated To</span>
+                <span class="allocation-value">{{ selectedAllocation.allocatedToName }}</span>
+              </div>
+              <div class="allocation-item">
+                <span class="allocation-label">Department</span>
+                <span class="allocation-value">{{ selectedAllocation.department }}</span>
+              </div>
+              <div class="allocation-item">
+                <span class="allocation-label">Status</span>
+                <span class="status-badge" [ngClass]="getStatusClass(selectedAllocation.status)">
+                  {{ selectedAllocation.status }}
+                </span>
+              </div>
+              <div class="allocation-item full-width">
+                <span class="allocation-label">Notes</span>
+                <span class="allocation-value">{{ selectedAllocation.notes || 'No notes provided' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-card timeline-card" style="margin-top: 12px;">
+            <div class="info-card-title">
+              <i class="fa-solid fa-timeline"></i> Timeline
+            </div>
+            <div class="timeline-items">
+              <div class="timeline-item">
+                <div class="timeline-icon created">
+                  <i class="fa-solid fa-plus"></i>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-title">Allocation Created</div>
+                  <div class="timeline-date">{{ selectedAllocation.createdAt | date:'dd MMM yyyy, h:mm a' }}</div>
+                </div>
+              </div>
+              <div class="timeline-item" *ngIf="selectedAllocation.status === 'Approved'">
+                <div class="timeline-icon approved">
+                  <i class="fa-solid fa-check"></i>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-title">Allocation Approved</div>
+                  <div class="timeline-date">{{ selectedAllocation.updatedAt | date:'dd MMM yyyy, h:mm a' }}</div>
+                </div>
+              </div>
+              <div class="timeline-item" *ngIf="selectedAllocation.status === 'Rejected'">
+                <div class="timeline-icon rejected">
+                  <i class="fa-solid fa-times"></i>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-title">Allocation Rejected</div>
+                  <div class="timeline-date">{{ selectedAllocation.updatedAt | date:'dd MMM yyyy, h:mm a' }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== CREATE/EDIT MODAL ==================== -->
+  <div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+
+      <!-- Modal Header -->
+      <div class="modal-header-bar">
+        <div class="modal-header-left">
+          <i class="fa-solid" [ngClass]="isEditMode ? 'fa-pen-to-square' : 'fa-table-cells'"></i>
+          <h3>{{ isEditMode ? 'Edit Allocation' : 'Create New Allocation' }}</h3>
+        </div>
+        <button class="modal-close-btn" type="button" (click)="closeModal()">&times;</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body-content">
+
+        <!-- Form Grid - Two Columns -->
+        <div class="form-grid-2">
+
+          <!-- Left Column -->
+          <div class="form-column">
+
+            <!-- Allocation Number (Auto-generated) -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-hashtag"></i>
+                ALLOCATION NUMBER
+              </label>
+              <input
+                type="text"
+                class="input-ctrl"
+                [value]="activeAllocation.allocationNumber || generateAllocationNumber()"
+                disabled
+                style="background: #f1f5f9;">
+            </div>
+
+            <!-- Expense Date -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-calendar-day"></i>
+                EXPENSE DATE *
+              </label>
+              <input
+                type="date"
+                class="input-ctrl"
+                [(ngModel)]="activeAllocation.expenseDate"
+                [value]="activeAllocation.expenseDate | date:'yyyy-MM-dd'">
+            </div>
+
+            <!-- Expense Type -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-tag"></i>
+                EXPENSE TYPE *
+              </label>
+              <select class="input-ctrl" [(ngModel)]="activeAllocation.expenseType" (ngModelChange)="onExpenseTypeChange()">
+                <option value="Direct">📌 Direct</option>
+                <option value="Indirect">🏢 Indirect</option>
+              </select>
+            </div>
+
+            <!-- Expense Category -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-list"></i>
+                CATEGORY *
+              </label>
+              <select class="input-ctrl" [(ngModel)]="activeAllocation.expenseCategory">
+                <option *ngFor="let cat of getCategories()" [value]="cat">
+                  {{ cat }}
+                </option>
+              </select>
+            </div>
+
+          </div>
+
+          <!-- Right Column -->
+          <div class="form-column">
+
+            <!-- Amount -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-money-bill-wave"></i>
+                AMOUNT (PKR) *
+              </label>
+              <input
+                type="number"
+                class="input-ctrl"
+                [(ngModel)]="activeAllocation.amount"
+                placeholder="0"
+                min="0">
+            </div>
+
+            <!-- Allocation Type -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-arrows-split-up-and-left"></i>
+                ALLOCATION TYPE *
+              </label>
+              <select class="input-ctrl" [(ngModel)]="activeAllocation.allocationType">
+                <option value="Client">👤 Client</option>
+                <option value="Department">🏢 Department</option>
+                <option value="Branch">📍 Branch</option>
+                <option value="Project">📋 Project</option>
+              </select>
+            </div>
+
+            <!-- Allocated To -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-user"></i>
+                ALLOCATED TO *
+              </label>
+              <select class="input-ctrl" [(ngModel)]="activeAllocation.allocatedToId" (ngModelChange)="onAllocatedToChange()">
+                <option value="">Select...</option>
+                <option *ngFor="let item of getAllocationOptions()" [value]="item.id">
+                  {{ item.name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Department -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-building"></i>
+                DEPARTMENT *
+              </label>
+              <select class="input-ctrl" [(ngModel)]="activeAllocation.department">
+                <option *ngFor="let dept of getDepartments()" [value]="dept">
+                  {{ dept }}
+                </option>
+              </select>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Full Width - Description -->
+        <div class="form-group full-width" style="margin-top: 16px;">
+          <label>
+            <i class="fa-solid fa-align-left"></i>
+            DESCRIPTION *
+          </label>
+          <input
+            type="text"
+            class="input-ctrl"
+            [(ngModel)]="activeAllocation.description"
+            placeholder="Brief description of the expense">
+        </div>
+
+        <!-- Financial Details - Two Columns -->
+        <div class="form-grid-2" style="margin-top: 16px;">
+
+          <!-- Left Column -->
+          <div class="form-column">
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-credit-card"></i>
+                PAYMENT METHOD
+              </label>
+              <select class="input-ctrl" [(ngModel)]="activeAllocation.paymentMethod">
+                <option value="Cash">💵 Cash</option>
+                <option value="Bank Transfer">🏦 Bank Transfer</option>
+                <option value="Cheque">📝 Cheque</option>
+                <option value="Online Payment">💻 Online Payment</option>
+                <option value="Credit Card">💳 Credit Card</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Right Column -->
+          <div class="form-column">
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-hashtag"></i>
+                REFERENCE NUMBER
+              </label>
+              <input
+                type="text"
+                class="input-ctrl"
+                [(ngModel)]="activeAllocation.referenceNumber"
+                placeholder="Cheque #, Transaction ID, etc.">
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Full Width - Notes -->
+        <div class="form-group full-width" style="margin-top: 16px;">
+          <label>
+            <i class="fa-solid fa-note-sticky"></i>
+            NOTES
+          </label>
+          <textarea class="textarea-ctrl" rows="2" [(ngModel)]="activeAllocation.notes" placeholder="Additional notes..."></textarea>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer-bar">
+        <button type="button" class="btn-cancel" (click)="closeModal()">
+          <i class="fa-solid fa-times"></i> Cancel
+        </button>
+        <button type="button" class="btn-save" (click)="saveAllocation()">
+          <i class="fa-solid" [ngClass]="isEditMode ? 'fa-pen' : 'fa-save'"></i>
+          {{ isEditMode ? 'Update Allocation' : 'Save Allocation' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

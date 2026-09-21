@@ -1,0 +1,432 @@
+/* ============================================================
+   BRANCHES PAGE - Dark Executive Theme (Slate to Teal)
+   Updated to match Users/System CSS exactly.
+   ============================================================ */
+
+.customer-page-container {
+  padding: 20px 24px;
+  background: linear-gradient(160deg, #0f1420 0%, #16283a 35%, #0f4a44 70%, #0d3b36 100%);
+  min-height: calc(100vh - 60px);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  box-sizing: border-box;
+}
+
+/* ==================== TOP BANNER ==================== */
+.invoice-top-banner {
+  background: linear-gradient(90deg, #131b2e 0%, #1e293b 55%, #0f766e 100%);
+  padding: 20px 24px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border: 0.5px solid #263449;
+}
+
+.banner-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-badge-icon {
+  width: 50px;
+  height: 50px;
+  background: #14b8a6;
+  color: #ffffff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.25);
+}
+
+.sub-category {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.invoice-top-banner h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.banner-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.create-customer-btn {
+  background: #14b8a6;
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.create-customer-btn:hover {
+  background: #0d9488;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.35);
+}
+
+/* ==================== TABLE SECTION ==================== */
+.full-width-table-section {
+  background: #131b2e;
+  border-radius: 12px;
+  border: 0.5px solid #263449;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.table-header-toolbar {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 0.5px solid #263449;
+}
+
+.table-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #e5e9f0;
+}
+
+.result-count {
+  font-size: 12px;
+  font-weight: 400;
+  color: #64748b;
+  background: #1e293b;
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+.search-wrapper {
+  position: relative;
+  width: 250px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+}
+
+.search-input {
+  padding-left: 34px !important;
+  width: 100% !important;
+  border: 0.5px solid #334155 !important;
+  border-radius: 8px !important;
+  padding: 8px 12px 8px 34px !important;
+  outline: none !important;
+  transition: 0.2s ease !important;
+  background: #1e293b !important;
+  color: #e5e9f0 !important;
+}
+
+.search-input:focus {
+  border-color: #14b8a6 !important;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15) !important;
+}
+
+.toolbar-btn {
+  padding: 6px 14px;
+  border: 0.5px solid #334155;
+  border-radius: 6px;
+  background: #1e293b;
+  font-size: 12px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.toolbar-btn:hover {
+  background: #253347;
+  border-color: #475569;
+}
+
+.table-responsive { overflow-x: auto; }
+.receipt-table { width: 100%; border-collapse: collapse; }
+.receipt-table thead { background: #17233a; }
+.receipt-table th {
+  padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 700;
+  color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;
+  border-bottom: 2px solid #263449;
+}
+.receipt-table td {
+  padding: 12px 16px; border-bottom: 0.5px solid #1e293b;
+  font-size: 13px; color: #e5e9f0;
+}
+.receipt-table tbody tr { transition: all 0.15s ease; cursor: pointer; }
+.receipt-table tbody tr:hover { background: #17233a; }
+.receipt-table tbody tr.selected { background: rgba(20, 184, 166, 0.08); border-left: 3px solid #14b8a6; }
+
+.receipt-cell { display: flex; align-items: center; gap: 12px; }
+
+/* Avatar - Branch Teal Gradient */
+.receipt-avatar {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, #14b8a6, #0d9488) !important;
+  color: #ffffff; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.receipt-name { font-weight: 600; color: #e5e9f0; }
+
+.action-btn {
+  background: none; border: none; color: #64748b;
+  cursor: pointer; padding: 4px 8px; border-radius: 4px;
+  transition: all 0.2s ease;
+}
+.action-btn:hover { background: rgba(20, 184, 166, 0.15); color: #14b8a6; }
+
+.empty-state { text-align: center; padding: 40px 20px !important; color: #64748b; }
+.empty-state i { font-size: 32px; display: block; margin-bottom: 10px; }
+.font-bold { font-weight: 700 !important; }
+
+/* ==================== STATUS BADGES ==================== */
+.status-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600;
+}
+.status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+.status-cleared { background: #052e16; color: #4ade80; }
+.status-cleared .status-dot { background: #4ade80; }
+.status-cancelled { background: #2a1215; color: #f87171; }
+.status-cancelled .status-dot { background: #f87171; }
+
+.text-success { color: #4ade80 !important; }
+.text-danger { color: #f87171 !important; }
+
+/* ==================== DETAIL SECTION ==================== */
+.detail-section {
+  background: #131b2e; border: 0.5px solid #263449; border-radius: 12px;
+  overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+.detail-section-header {
+  padding: 18px 24px; background: #17233a;
+  border-bottom: 0.5px solid #263449;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.detail-section-title { display: flex; align-items: center; gap: 14px; }
+
+/* Avatar - Branch Teal Gradient */
+.detail-avatar {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, #14b8a6, #0d9488) !important;
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 16px; color: white;
+}
+.detail-section-title h3 { margin: 0; font-size: 18px; font-weight: 600; color: #e5e9f0; }
+.detail-section-title p { margin: 2px 0 0 0; font-size: 12px; color: #94a3b8; }
+
+.btn-action {
+  padding: 6px 12px; border-radius: 6px; cursor: pointer;
+  font-size: 12px; display: flex; align-items: center; gap: 6px; transition: 0.2s ease;
+}
+.btn-action.primary { background: #14b8a6; color: white; border: none; }
+.btn-action.primary:hover { background: #0d9488; }
+
+.detail-tab-content {
+  padding: 20px 24px; max-height: 300px; overflow-y: auto; background: #131b2e;
+}
+
+/* ==================== KPI STATS MINI CARDS (UPDATED) ==================== */
+.kpi-stats-mini {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;
+}
+.kpi-mini-card {
+  background: #17233a;
+  border: 0.5px solid #263449;
+  border-radius: 8px; padding: 12px; text-align: center;
+  transition: all 0.2s ease;
+}
+.kpi-mini-card:hover {
+  border-color: #475569;
+  transform: translateY(-2px);
+}
+.kpi-mini-card div:first-child {
+  font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase;
+}
+.kpi-mini-card div:last-child {
+  font-size: 18px; font-weight: 700; color: #e5e9f0; margin-top: 2px;
+}
+.kpi-mini-card .text-warning { color: #fbbf24; }
+.kpi-mini-card .text-success { color: #4ade80; }
+
+/* ==================== INFO CARD ==================== */
+.info-card-section {
+  background: #17233a; border: 0.5px solid #263449; border-radius: 10px; padding: 20px;
+}
+.section-card-title {
+  font-size: 12px; font-weight: 700; color: #94a3b8;
+  margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+  border-bottom: 0.5px solid #263449; padding-bottom: 10px;
+}
+.section-card-title i { color: #14b8a6; }
+
+.voucher-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.voucher-item {
+  display: flex; flex-direction: column; gap: 4px;
+  background: #131b2e; padding: 10px 14px; border-radius: 8px; border: 0.5px solid #263449;
+}
+.v-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+.v-value { font-size: 13px; font-weight: 600; color: #e5e9f0; }
+
+/* ==================== GRID VIEW ==================== */
+.receipt-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px; padding: 20px;
+}
+.receipt-grid-card {
+  background: #131b2e; border: 0.5px solid #263449; border-radius: 12px;
+  padding: 16px; cursor: pointer; transition: all 0.2s ease;
+}
+.receipt-grid-card:hover {
+  border-color: #475569; box-shadow: 0 4px 12px rgba(0,0,0,0.35); transform: translateY(-2px);
+}
+.receipt-grid-card.selected { border-color: #14b8a6; box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15); }
+
+.grid-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+
+/* Avatar - Branch Teal Gradient */
+.grid-card-avatar {
+  width: 48px; height: 48px;
+  background: linear-gradient(135deg, #14b8a6, #0d9488) !important;
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 18px; color: white;
+}
+
+.grid-card-status { font-size: 10px; font-weight: 600; padding: 2px 10px; border-radius: 10px; }
+.status-cleared { background: #052e16; color: #4ade80; }
+.status-pending { background: #2a1215; color: #f87171; }
+
+.grid-card-body h4 { margin: 0 0 4px 0; font-size: 15px; color: #e5e9f0; }
+.grid-card-sub { font-size: 12px; color: #64748b; }
+.grid-card-details { margin-top: 10px; }
+.grid-card-details p { margin: 4px 0; font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 6px; }
+.grid-card-details i { width: 14px; color: #64748b; }
+.empty-state-grid { grid-column: 1 / -1; text-align: center; padding: 40px; color: #64748b; }
+
+/* ============================================================
+   MODAL STYLES (UPDATED TO MATCH INVOICE DARK THEME)
+   ============================================================ */
+
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center;
+  z-index: 9999; backdrop-filter: blur(5px); animation: modalFadeIn 0.25s ease;
+}
+@keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal-container {
+  background: #131b2e; border-radius: 16px; width: 600px; max-width: 95%;
+  max-height: 90vh; overflow: hidden; border: 0.5px solid #263449;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.6); animation: modalSlideUp 0.3s ease;
+}
+@keyframes modalSlideUp {
+  from { transform: translateY(20px) scale(0.97); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.modal-header-bar {
+  padding: 18px 24px;
+  background: linear-gradient(90deg, #131b2e 0%, #1e293b 60%, #0f766e 100%);
+  border-bottom: 0.5px solid #263449;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.modal-header-bar h3 { margin: 0; font-size: 18px; font-weight: 700; color: #ffffff; }
+.modal-close-btn {
+  background: none; border: none; font-size: 28px; color: #94a3b8;
+  cursor: pointer; transition: all 0.3s ease; line-height: 1;
+}
+.modal-close-btn:hover { color: #f87171; transform: rotate(90deg); }
+
+.modal-body-content { padding: 24px; max-height: 65vh; overflow-y: auto; }
+
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group.full-width { grid-column: 1 / -1; }
+.form-group label {
+  font-size: 11px; font-weight: 700; color: #94a3b8;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+.input-ctrl {
+  padding: 10px 14px; border: 0.5px solid #334155; border-radius: 8px;
+  font-size: 14px; color: #e5e9f0; background: #1e293b; transition: all 0.2s ease;
+  width: 100%; box-sizing: border-box;
+}
+.input-ctrl:focus {
+  outline: none; border-color: #14b8a6; box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+}
+
+.segmented-control {
+  display: inline-flex; align-items: center; background: #1e293b;
+  padding: 4px; border-radius: 12px; gap: 4px;
+}
+.segmented-btn {
+  display: flex; align-items: center; justify-content: center;
+  padding: 6px 16px; border: none; background: transparent; border-radius: 8px;
+  font-size: 12px; font-weight: 600; color: #64748b; cursor: pointer;
+  transition: all 0.25s ease;
+}
+.segmented-btn:hover { color: #e5e9f0; }
+.segmented-btn.active {
+  background: #14b8a6; color: #ffffff; box-shadow: 0 2px 8px rgba(20, 184, 166, 0.25);
+}
+
+.modal-footer-bar {
+  padding: 16px 24px; background: #17233a; border-top: 0.5px solid #263449;
+  display: flex; justify-content: flex-end; gap: 12px;
+}
+
+.btn-cancel {
+  padding: 10px 20px; background: #1e293b; color: #94a3b8;
+  border: 0.5px solid #334155; border-radius: 8px; font-weight: 600;
+  font-size: 13px; cursor: pointer; transition: all 0.2s ease;
+}
+.btn-cancel:hover { background: #253347; color: #ffffff; }
+
+.btn-save {
+  padding: 10px 24px; background: #14b8a6; color: #ffffff;
+  border: none; border-radius: 8px; font-weight: 600; font-size: 13px;
+  cursor: pointer; transition: all 0.2s ease;
+}
+.btn-save:hover {
+  transform: translateY(-2px); box-shadow: 0 4px 16px rgba(20, 184, 166, 0.35);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .invoice-top-banner { flex-direction: column; gap: 12px; align-items: stretch; padding: 16px 20px; }
+  .banner-actions { flex-wrap: wrap; }
+  .table-header-toolbar { flex-direction: column; gap: 12px; align-items: stretch; }
+  .search-wrapper { width: 100% !important; }
+  .detail-section-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+  .voucher-grid { grid-template-columns: 1fr; }
+  .kpi-stats-mini { grid-template-columns: 1fr 1fr; }
+}

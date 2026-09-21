@@ -1,0 +1,263 @@
+<!-- src/app/pages/system/audit-logs/audit-logs.html -->
+
+<div class="customer-page-container">
+  
+  <!-- TOP HEADER BANNER -->
+  <div class="invoice-top-banner">
+    <div class="banner-left">
+      <div class="header-badge-icon">
+        <i class="fa-solid fa-file-shield"></i>
+      </div>
+      <div>
+        <h2>Audit & Activity Logs</h2>
+      </div>
+    </div>
+    <div class="banner-actions">
+      <button class="import-excel-btn" type="button" (click)="exportLogs()">
+        <i class="fa-solid fa-file-csv"></i> Export CSV
+      </button>
+      <button class="create-customer-btn" type="button" (click)="loadLogs()" style="background: #7c3aed; min-width: 130px;">
+        <i class="fa-solid fa-rotate" [class.spinning]="isRefreshing"></i> 
+        {{ isRefreshing ? 'Refreshing...' : 'Refresh Data' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- FILTERS CARD -->
+  <div class="filter-section-card">
+    <div class="filter-row-wrapper">
+      
+      <!-- Search by User -->
+      <div class="filter-group" style="position: relative;">
+        <label>Search User</label>
+        <div style="position: relative;">
+          <input 
+            type="text" 
+            class="filter-select" 
+            [(ngModel)]="searchUser" 
+            (ngModelChange)="currentPage = 1; saveFilters()"
+            placeholder="Type a user's name..."
+            style="padding-right: 70px;"
+          >
+          <span style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: #7c3aed; color: white; font-size: 10px; padding: 2px 10px; border-radius: 12px; font-weight: 600; pointer-events: none;">
+            {{ filteredLogs.length }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Action Type Dropdown -->
+      <div class="filter-group">
+        <label>Action Type</label>
+        <select 
+          class="filter-select" 
+          [(ngModel)]="actionFilter" 
+          (ngModelChange)="currentPage = 1; saveFilters()"
+        >
+          <option value="All">All Actions</option>
+          <option value="Login">Login / Auth</option>
+          <option value="Create">Create Record</option>
+          <option value="Update">Update Record</option>
+          <option value="Delete">Delete Record</option>
+          <option value="Export">Export Data</option>
+        </select>
+      </div>
+
+      <!-- Date Filters -->
+      <div class="filter-group">
+        <label>From Date</label>
+        <input 
+          type="date" 
+          class="filter-select" 
+          [(ngModel)]="fromDate" 
+          (ngModelChange)="currentPage = 1; saveFilters()"
+        >
+      </div>
+      <div class="filter-group">
+        <label>To Date</label>
+        <input 
+          type="date" 
+          class="filter-select" 
+          [(ngModel)]="toDate" 
+          (ngModelChange)="currentPage = 1; saveFilters()"
+        >
+      </div>
+
+      <!-- Reset Button -->
+      <div class="filter-group" style="justify-content: flex-end;">
+        <button class="reset-chip" (click)="resetFilters()" style="padding: 8px 16px; margin-top: 16px;">
+          <i class="fa-solid fa-rotate"></i> Reset Filters
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 🆕 VIEW TOGGLE BUTTONS (List vs Timeline) -->
+  <div class="segmented-control-wrapper" style="margin-bottom: 20px; display: flex; justify-content: center;">
+    <div class="segmented-control" style="padding: 4px;">
+      <button class="segmented-btn" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'">
+        <i class="fa-solid fa-table"></i> List View
+      </button>
+      <button class="segmented-btn" [class.active]="viewMode === 'timeline'" (click)="viewMode = 'timeline'">
+        <i class="fa-solid fa-clock-rotate-left"></i> Timeline View
+      </button>
+    </div>
+  </div>
+
+  <!-- ================== LIST VIEW (Table) ================== -->
+  <div *ngIf="viewMode === 'list'" class="full-width-table-section">
+    <div class="table-container">
+      <div class="table-responsive">
+        <table class="receipt-table">
+          <thead>
+            <tr>
+              <th style="width: 50px;">#</th>
+              <th>Date & Time</th>
+              <th>User</th>
+              <th>Action Type</th>
+              <th>Description</th>
+              <th>IP Address</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let log of paginatedLogs; let i = index">
+              <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+              <td style="font-size: 12px; white-space: nowrap;">{{ log.timestamp }}</td>
+              <td>
+                <div class="receipt-cell">
+                  <div class="receipt-avatar" style="width: 28px; height: 28px; font-size: 10px; background: linear-gradient(135deg, #7c3aed, #6d28d9);">
+                    {{ getInitials(log.user) }}
+                  </div>
+                  <div class="receipt-name" style="font-size: 13px;">{{ log.user }}</div>
+                </div>
+              </td>
+              <td>
+                <span class="action-badge" [ngClass]="{
+                  'action-login': log.action === 'Login',
+                  'action-create': log.action === 'Create',
+                  'action-update': log.action === 'Update',
+                  'action-delete': log.action === 'Delete',
+                  'action-export': log.action === 'Export'
+                }">
+                  <i class="fa-solid" [ngClass]="{
+                    'fa-right-to-bracket': log.action === 'Login',
+                    'fa-plus': log.action === 'Create',
+                    'fa-pen': log.action === 'Update',
+                    'fa-trash': log.action === 'Delete',
+                    'fa-file-export': log.action === 'Export'
+                  }"></i>
+                  {{ log.action }}
+                </span>
+              </td>
+              <td style="color: #475569; max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                {{ log.description }}
+              </td>
+              <td style="font-family: monospace; font-size: 12px; color: #64748b;">{{ log.ip }}</td>
+            </tr>
+            <tr *ngIf="paginatedLogs.length === 0">
+              <td colspan="6" class="empty-state">
+                <i class="fa-solid fa-file-shield"></i>
+                <p>No audit logs found matching your criteria.</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Footer -->
+      <div class="table-footer">
+        <div class="pagination-info">
+          Showing {{ (currentPage - 1) * pageSize + 1 }} -
+          {{ (currentPage * pageSize > filteredLogs.length) ? filteredLogs.length : currentPage * pageSize }}
+          of {{ filteredLogs.length }} records
+        </div>
+        <div class="pagination-controls">
+          <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <button
+            class="page-btn"
+            *ngFor="let p of getPageNumbers()"
+            [class.active]="currentPage === p"
+            (click)="goToPage(p)">
+            {{ p }}
+          </button>
+          <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+        <div class="page-size-selector">
+          <select [(ngModel)]="pageSize" (ngModelChange)="currentPage = 1">
+            <option value="10">10 per page</option>
+            <option value="25">25 per page</option>
+            <option value="50">50 per page</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================== TIMELINE VIEW ================== -->
+  <!-- ================== TIMELINE VIEW ================== -->
+<div *ngIf="viewMode === 'timeline'" class="full-width-table-section timeline-container">
+  <div class="timeline-inner-card">
+    
+    <div class="timeline-list">
+      <div *ngFor="let log of filteredLogs; let last = last" class="timeline-item">
+        
+        <!-- Timeline Line -->
+        <div *ngIf="!last" class="timeline-line"></div>
+
+        <!-- Left: Time & Dot -->
+        <div class="timeline-time">
+          <span>{{ log.timestamp }}</span>
+        </div>
+        <div class="timeline-dot"></div>
+
+        <!-- Right: Content Box -->
+        <div class="timeline-card">
+          
+          <!-- User Avatar -->
+          <div class="receipt-avatar" style="width: 32px; height: 32px; font-size: 12px;">
+            {{ getInitials(log.user) }}
+          </div>
+
+          <!-- User Name -->
+          <span class="timeline-user-name">{{ log.user }}</span>
+
+          <!-- Action Badge -->
+          <span class="action-badge" [ngClass]="{
+            'action-login': log.action === 'Login',
+            'action-create': log.action === 'Create',
+            'action-update': log.action === 'Update',
+            'action-delete': log.action === 'Delete',
+            'action-export': log.action === 'Export'
+          }">
+            <i class="fa-solid" [ngClass]="{
+              'fa-right-to-bracket': log.action === 'Login',
+              'fa-plus': log.action === 'Create',
+              'fa-pen': log.action === 'Update',
+              'fa-trash': log.action === 'Delete',
+              'fa-file-export': log.action === 'Export'
+            }"></i>
+            {{ log.action }}
+          </span>
+
+          <!-- Description -->
+          <span class="timeline-desc">{{ log.description }}</span>
+
+          <!-- IP Address -->
+          <span class="timeline-ip">{{ log.ip }}</span>
+        </div>
+      </div>
+
+      <div *ngIf="filteredLogs.length === 0" class="empty-state" style="padding: 40px 20px !important; text-align: center; color: #94a3b8;">
+        <i class="fa-solid fa-file-shield" style="font-size: 32px; display: block; margin-bottom: 10px;"></i>
+        <p>No audit logs found matching your criteria.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div>

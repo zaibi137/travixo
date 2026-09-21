@@ -1,0 +1,649 @@
+<!-- src/app/pages/sales/customer-invoice/customer-invoice.html -->
+
+<div class="customer-page-container">
+  
+  <!-- TOP HEADER -->
+  <div class="page-top-header">
+    <div class="breadcrumb-title">
+      <div class="header-badge-icon">
+        <i class="fa-solid fa-file-invoice-dollar"></i>
+      </div>
+      <div>
+        <h2>Customer Invoice</h2>
+      </div>
+    </div>
+    
+    <div class="header-action-group">
+      <button class="import-excel-btn" type="button">
+        <i class="fa-solid fa-file-excel"></i> Import Excel / CSV
+      </button>
+      <button class="create-customer-btn" type="button" (click)="openCreateModal()">
+        <i class="fa-solid fa-plus"></i> Create Invoice
+      </button>
+    </div>
+  </div>
+
+  <!-- TWO-COLUMN TOP SECTION (Filters + Stats) -->
+  <div class="two-column-top">
+    
+    <!-- LEFT COLUMN: Search & Filters -->
+    <div class="filter-column">
+      <div class="search-wrapper">
+        <i class="fa-solid fa-search search-icon"></i>
+        <input
+          type="text"
+          class="search-input"
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="applyFilters()"
+          placeholder="Search by invoice code, customer name or ID..."
+        >
+        <button class="clear-search" *ngIf="searchQuery" (click)="searchQuery = ''; applyFilters()">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>Status</label>
+          <select class="filter-select" [(ngModel)]="statusFilter" (ngModelChange)="applyFilters()">
+            <option value="All">All Status</option>
+            <option value="Pending">⏳ Pending</option>
+            <option value="Partially Paid">💰 Partially Paid</option>
+            <option value="Paid">✅ Paid</option>
+            <option value="Overdue">⚠️ Overdue</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Period</label>
+          <select class="filter-select" [(ngModel)]="filterPeriod" (ngModelChange)="applyFilters()">
+            <option value="all">All Time</option>
+            <option value="this-month">This Month</option>
+            <option value="last-month">Last Month</option>
+            <option value="this-quarter">This Quarter</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="quick-filters">
+        <span class="quick-filter-label">Quick Filters:</span>
+        <button
+          class="filter-chip"
+          [class.active]="statusFilter === 'Pending'"
+          (click)="statusFilter = 'Pending'; applyFilters()">
+          ⏳ Pending
+        </button>
+        <button
+          class="filter-chip"
+          [class.active]="statusFilter === 'Paid'"
+          (click)="statusFilter = 'Paid'; applyFilters()">
+          ✅ Paid
+        </button>
+        <button
+          class="filter-chip"
+          [class.active]="statusFilter === 'Overdue'"
+          (click)="statusFilter = 'Overdue'; applyFilters()">
+          ⚠️ Overdue
+        </button>
+        <button
+          class="filter-chip reset-chip"
+          *ngIf="statusFilter !== 'All' || searchQuery"
+          (click)="clearAllFilters()">
+          <i class="fa-solid fa-rotate"></i> Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Stats Cards -->
+    <div class="stats-column">
+      <div class="stats-grid">
+        <div class="stat-card total">
+          <div class="stat-icon">
+            <i class="fa-solid fa-receipt"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Invoices</span>
+            <span class="stat-value">{{ invoices.length }}</span>
+          </div>
+        </div>
+
+        <div class="stat-card pending">
+          <div class="stat-icon">
+            <i class="fa-solid fa-clock"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Pending</span>
+            <span class="stat-value">{{ getPendingCount() }}</span>
+          </div>
+        </div>
+
+        <div class="stat-card paid">
+          <div class="stat-icon">
+            <i class="fa-solid fa-check-circle"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Paid</span>
+            <span class="stat-value">{{ getPaidCount() }}</span>
+          </div>
+        </div>
+
+        <div class="stat-card amount">
+          <div class="stat-icon">
+            <i class="fa-solid fa-money-bill-wave"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Amount</span>
+            <span class="stat-value">₨ {{ getTotalAmount() | number }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FULL-WIDTH TABLE SECTION -->
+  <div class="full-width-table-section">
+    <div class="table-container">
+      <div class="table-header-toolbar">
+        <div class="table-title">
+          <i class="fa-solid fa-list-ul"></i>
+          <span>Invoice Directory</span>
+          <span class="result-count">{{ filteredInvoices.length }} results</span>
+        </div>
+        <div class="table-toolbar-actions">
+          <button class="toolbar-btn" (click)="toggleView()">
+            <i class="fa-solid" [ngClass]="{'fa-table-cells': isGridView, 'fa-table': !isGridView}"></i>
+            {{ isGridView ? 'Grid View' : 'List View' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- LIST VIEW -->
+      <div *ngIf="!isGridView" class="table-responsive">
+        <table class="invoice-table">
+          <thead>
+            <tr>
+              <th class="col-index">#</th>
+              <th>Invoice Code</th>
+              <th>Customer</th>
+              <th>Date</th>
+              <th>Amount (PKR)</th>
+              <th>Status</th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let item of paginatedInvoices; let i = index"
+              [class.selected]="selectedInvoice?.id === item.id"
+              (click)="openInvoiceDetails(item)"
+            >
+              <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+              <td>
+                <span class="invoice-code-link">{{ item.invoicecode }}</span>
+              </td>
+              <td>
+                <div class="invoice-cell">
+                  <div class="invoice-avatar">{{ getInitials(item.customername || 'Customer ' + item.customerid) }}</div>
+                  <div>
+                    <div class="invoice-name">{{ item.customername || 'Customer ID: ' + item.customerid }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>{{ item.invoicedate | date:'shortDate' }}</td>
+              <td class="amount-total">₨ {{ item.totalamount | number }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="{
+                  'status-pending': item.status === 'Pending',
+                  'status-paid': item.status === 'Paid',
+                  'status-partial': item.status === 'Partially Paid' || item.status === 'Partial Paid',
+                  'status-overdue': item.status === 'Overdue'
+                }">
+                  <span class="status-dot"></span>
+                  {{ item.status }}
+                </span>
+              </td>
+
+              <!-- ACTIONS -->
+              <td>
+                <div class="action-btn-group" (click)="$event.stopPropagation()">
+                  <button class="action-btn edit-btn" (click)="openEditModal(item)" title="Edit Invoice">
+                    <i class="fa-solid fa-pencil"></i>
+                  </button>
+                  <button class="action-btn delete-btn" (click)="deleteInvoice(item)" title="Delete Invoice">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="paginatedInvoices.length === 0">
+              <td colspan="7" class="empty-state">
+                <i class="fa-solid fa-inbox"></i>
+                <p>No invoices found matching your criteria</p>
+                <button class="clear-filters-btn" (click)="clearAllFilters()">Clear Filters</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- GRID VIEW -->
+      <div *ngIf="isGridView" class="invoice-grid">
+        <div 
+          class="invoice-grid-card" 
+          *ngFor="let item of paginatedInvoices"
+          [class.selected]="selectedInvoice?.id === item.id"
+          (click)="openInvoiceDetails(item)"
+        >
+          <div class="grid-card-header">
+            <div class="grid-card-avatar">{{ getInitials(item.customername || 'Customer ' + item.customerid) }}</div>
+            <span class="grid-card-status" [ngClass]="{
+              'status-pending': item.status === 'Pending',
+              'status-paid': item.status === 'Paid',
+              'status-partial': item.status === 'Partially Paid' || item.status === 'Partial Paid',
+              'status-overdue': item.status === 'Overdue'
+            }">
+              {{ item.status }}
+            </span>
+          </div>
+          <div class="grid-card-body">
+            <h4>{{ item.invoicecode }}</h4>
+            <span class="grid-card-sub">{{ item.customername || 'Customer ID: ' + item.customerid }}</span>
+            <div class="grid-card-details">
+              <p><i class="fa-solid fa-calendar"></i> {{ item.invoicedate | date:'shortDate' }}</p>
+              <p><i class="fa-solid fa-money-bill"></i> ₨ {{ item.totalamount | number }}</p>
+            </div>
+            <div class="grid-card-actions" (click)="$event.stopPropagation()">
+              <button class="action-btn edit-btn" (click)="openEditModal(item)" title="Edit">
+                <i class="fa-solid fa-pencil"></i>
+              </button>
+              <button class="action-btn delete-btn" (click)="deleteInvoice(item)" title="Delete">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGINATION -->
+      <div class="table-footer">
+        <div class="pagination-info">
+          Showing {{ (currentPage - 1) * pageSize + 1 }} -
+          {{ Math.min(currentPage * pageSize, filteredInvoices.length) }}
+          of {{ filteredInvoices.length }} invoices
+        </div>
+        <div class="pagination-controls">
+          <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+        <div class="page-size-selector">
+          <select [(ngModel)]="pageSize" (ngModelChange)="currentPage = 1">
+            <option [ngValue]="5">5 per page</option>
+            <option [ngValue]="10">10 per page</option>
+            <option [ngValue]="25">25 per page</option>
+            <option [ngValue]="50">50 per page</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFESSIONAL INVOICE DETAIL MODAL -->
+  <div *ngIf="showDetailModal" class="modal-overlay" (click)="closeDetailModal()">
+    <div class="modal-card detail-modal-card" (click)="$event.stopPropagation()">
+      
+      <!-- Detail Header -->
+      <div class="modal-header">
+        <div class="header-left">
+          <div class="avatar-badge">
+            {{ getInitials(selectedInvoice?.customername || 'CU') }}
+          </div>
+          <div class="header-titles">
+            <div class="title-row">
+              <h2>{{ selectedInvoice?.invoicecode }}</h2>
+              <span class="status-badge" [ngClass]="{
+                'status-pending': selectedInvoice?.status === 'Pending',
+                'status-paid': selectedInvoice?.status === 'Paid',
+                'status-partial': selectedInvoice?.status === 'Partially Paid' || selectedInvoice?.status === 'Partial Paid',
+                'status-overdue': selectedInvoice?.status === 'Overdue',
+                'status-draft': selectedInvoice?.status === 'Draft'
+              }">
+                {{ selectedInvoice?.status }}
+              </span>
+            </div>
+            <p class="subtitle">
+              Customer ID: <strong>#{{ selectedInvoice?.customerid }}</strong> 
+              <span class="dot">•</span> 
+              Issued: <strong>{{ selectedInvoice?.invoicedate | date:'shortDate' }}</strong>
+            </p>
+          </div>
+        </div>
+        <button class="btn-close" (click)="closeDetailModal()" aria-label="Close modal">&times;</button>
+      </div>
+
+      <!-- Detail Tabs -->
+      <div class="modal-tabs">
+        <button 
+          class="tab-btn" 
+          [class.active]="detailTab === 'details'" 
+          (click)="detailTab = 'details'">
+          <i class="fa-solid fa-circle-info"></i> Details Overview
+        </button>
+        <button 
+          class="tab-btn" 
+          [class.active]="detailTab === 'items'" 
+          (click)="detailTab = 'items'">
+          <i class="fa-solid fa-list-check"></i> Line Items 
+          
+          <!-- 100% FIX FOR LINE 340: Use 'as details' to create a local safe variable -->
+          <span class="tab-badge" *ngIf="selectedInvoice?.details as details">
+            {{ details.length }}
+          </span>
+        </button>
+      </div>
+
+      <!-- Detail Body: Overview -->
+      <div class="modal-body" *ngIf="detailTab === 'details'">
+        <div class="detail-grid">
+          <div class="grid-card">
+            <span class="card-label">INVOICE CODE</span>
+            <span class="card-value font-mono text-blue">{{ selectedInvoice?.invoicecode }}</span>
+          </div>
+
+          <div class="grid-card">
+            <span class="card-label">CUSTOMER NAME</span>
+            <span class="card-value customer-name">{{ selectedInvoice?.customername || ('ID: ' + selectedInvoice?.customerid) }}</span>
+          </div>
+
+          <div class="grid-card">
+            <span class="card-label">INVOICE DATE</span>
+            <span class="card-value">{{ selectedInvoice?.invoicedate | date:'shortDate' }}</span>
+          </div>
+
+          <div class="grid-card">
+            <span class="card-label">DUE DATE</span>
+            <span class="card-value">{{ selectedInvoice?.duedate | date:'shortDate' }}</span>
+          </div>
+
+          <div class="grid-card amount-card">
+            <span class="card-label">TOTAL AMOUNT</span>
+            <span class="card-value amount-green">₨ {{ selectedInvoice?.totalamount | number }}</span>
+          </div>
+
+          <div class="grid-card">
+            <span class="card-label">CREATED BY</span>
+            <span class="card-value user-tag"><i class="fa-solid fa-user-gear"></i> {{ selectedInvoice?.createdby || 'admin' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detail Body: Items -->
+      <div class="modal-body" *ngIf="detailTab === 'items'">
+        
+        <!-- 100% FIX FOR LINE 396: Use 'as items' to create a local array variable -->
+        <div class="table-container" *ngIf="selectedInvoice?.details as items; else noItems">
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Service Category</th>
+                <th>Qty</th>
+                <th>Cost (PKR)</th>
+                <th>Ref No</th>
+                <th class="text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- FIX: Loop through the local 'items' variable, not 'selectedInvoice.details' -->
+              <tr *ngFor="let item of items; let i = index">
+                <td>{{ i + 1 }}</td>
+                <td>
+                  <div class="cat-title">{{ item.servicecategory || 'General Service' }}</div>
+                  <div class="cat-desc" *ngIf="item.description">{{ item.description }}</div>
+                </td>
+                <td><span class="qty-pill">{{ item.quantity }}</span></td>
+                <td>₨ {{ item.cost | number }}</td>
+                <td><span class="ref-badge">{{ item.referenceno || '—' }}</span></td>
+                <td class="text-right font-bold text-teal">
+                  ₨ {{ (item.totalamount || (item.quantity * item.cost)) | number }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <ng-template #noItems>
+          <div class="empty-state-small">
+            <i class="fa-solid fa-inbox"></i>
+            <p>No detail items found for this invoice.</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Detail Footer -->
+      <div class="modal-footer">
+        <button class="btn-action btn-secondary" (click)="closeDetailModal()">Close</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PROFESSIONAL CREATE / EDIT INVOICE MODAL -->
+  <div *ngIf="showCreateModal" class="modal-overlay" (click)="closeCreateModal()">
+    <div class="modal-card form-modal-card" (click)="$event.stopPropagation()">
+      
+      <!-- Form Header -->
+      <div class="modal-header">
+        <div class="header-left">
+          <div class="avatar-badge form-avatar">
+            <i class="fa-solid" [ngClass]="isEditMode ? 'fa-pen-to-square' : 'fa-plus'"></i>
+          </div>
+          <div class="header-titles">
+            <h2>{{ isEditMode ? 'Edit Invoice' : 'Create New Invoice' }}</h2>
+            <p class="subtitle">{{ isEditMode ? 'Update invoice specifications and items' : 'Fill in customer information and add line items' }}</p>
+          </div>
+        </div>
+        <button class="btn-close" (click)="closeCreateModal()" aria-label="Close modal">&times;</button>
+      </div>
+
+      <!-- Form Body -->
+      <div class="modal-body form-modal-body">
+        
+        <!-- SECTION 1: INVOICE META HEADER -->
+        <div class="form-section-header">
+          <i class="fa-solid fa-receipt"></i>
+          <span>Invoice Information</span>
+        </div>
+
+        <div class="form-grid">
+          
+          <div class="form-group">
+            <label>INVOICE CODE</label>
+            <input 
+              type="text" 
+              class="input-ctrl" 
+              [(ngModel)]="newInvoice.invoicecode" 
+              name="invoicecode"
+              placeholder="e.g. INV-1001" 
+            />
+          </div>
+
+          <div class="form-group">
+            <label>SELECT CUSTOMER</label>
+            <select 
+              class="input-ctrl" 
+              [(ngModel)]="newInvoice.customerid" 
+              name="customerid"
+            >
+              <option [ngValue]="0" disabled>-- Select a Customer --</option>
+              <option *ngFor="let cust of customers" [ngValue]="cust.id">
+                {{ cust.name || cust.customername || cust.fullname }} (ID: {{ cust.id }})
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>INVOICE DATE</label>
+            <input 
+              type="date" 
+              class="input-ctrl" 
+              [(ngModel)]="newInvoice.invoicedate" 
+              name="invoicedate"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>DUE DATE</label>
+            <input 
+              type="date" 
+              class="input-ctrl" 
+              [(ngModel)]="newInvoice.duedate" 
+              name="duedate"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>CREATED BY</label>
+            <input 
+              type="text" 
+              class="input-ctrl" 
+              [(ngModel)]="newInvoice.createdby" 
+              name="createdby"
+              placeholder="e.g. admin or User Name" 
+            />
+          </div>
+
+          <div class="form-group">
+            <label>STATUS</label>
+            <select class="input-ctrl" [(ngModel)]="newInvoice.status" name="status">
+              <option value="Draft">Draft</option>
+              <option value="Pending">Pending</option>
+              <option value="Partially Paid">Partially Paid</option>
+              <option value="Paid">Paid</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- SECTION 2: DYNAMIC LINE ITEMS -->
+        <div class="items-section-container">
+          <div class="items-header-bar">
+            <div class="form-section-header no-margin">
+              <i class="fa-solid fa-layer-group"></i>
+              <span>Invoice Items & Services</span>
+            </div>
+            <button type="button" class="add-item-btn" (click)="addDetailItem()">
+              <i class="fa-solid fa-plus"></i> Add Line Item
+            </button>
+          </div>
+
+          <!-- LINE ITEM CARDS -->
+          <div class="line-items-list">
+            <div 
+              *ngFor="let item of newInvoice.details; let idx = index" 
+              class="line-item-card"
+            >
+              <div class="line-item-top">
+                <div class="form-group">
+                  <label>Category</label>
+                  <input 
+                    type="text" 
+                    class="input-ctrl" 
+                    [(ngModel)]="item.servicecategory" 
+                    [name]="'servicecategory_' + idx"
+                    placeholder="e.g. Air Ticket, Hotel, Visa" 
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label>Quantity</label>
+                  <input 
+                    type="number" 
+                    class="input-ctrl" 
+                    [(ngModel)]="item.quantity" 
+                    [name]="'quantity_' + idx"
+                    (ngModelChange)="calculateTotals()" 
+                    min="1" 
+                    placeholder="1" 
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label>Cost (PKR)</label>
+                  <input 
+                    type="number" 
+                    class="input-ctrl" 
+                    [(ngModel)]="item.cost" 
+                    [name]="'cost_' + idx"
+                    (ngModelChange)="calculateTotals()" 
+                    min="0" 
+                    placeholder="50000" 
+                  />
+                </div>
+              </div>
+
+              <div class="line-item-bottom">
+                <div class="form-group">
+                  <label>Ref No</label>
+                  <input 
+                    type="text" 
+                    class="input-ctrl" 
+                    [(ngModel)]="item.referenceno" 
+                    [name]="'referenceno_' + idx"
+                    placeholder="e.g. REF-1002" 
+                  />
+                </div>
+
+                <div class="form-group desc-group">
+                  <label>Description</label>
+                  <input 
+                    type="text" 
+                    class="input-ctrl" 
+                    [(ngModel)]="item.description" 
+                    [name]="'description_' + idx"
+                    placeholder="Flight ticket from Lahore to Dubai" 
+                  />
+                </div>
+
+                <button 
+                  type="button" 
+                  class="action-btn delete-btn remove-item-btn" 
+                  (click)="removeDetailItem(idx)" 
+                  title="Remove item"
+                >
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+
+              <div class="item-subtotal">
+                Subtotal: <strong>₨ {{ ((item.quantity || 0) * (item.cost || 0)) | number }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GRAND TOTAL BANNER -->
+        <div class="grand-total-banner">
+          <span>Grand Total</span>
+          <span class="grand-total-amount">₨ {{ newInvoice.totalamount | number }}</span>
+        </div>
+
+      </div>
+
+      <!-- Form Footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn-action btn-secondary" (click)="closeCreateModal()">Cancel</button>
+        <button type="button" class="btn-action btn-primary" (click)="saveInvoice()">
+          <i class="fa-solid" [ngClass]="isEditMode ? 'fa-check' : 'fa-paper-plane'"></i>
+          {{ isEditMode ? 'Update Invoice' : 'Save Invoice' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

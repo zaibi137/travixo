@@ -1,0 +1,689 @@
+<!-- src/app/pages/purchase/vendor-purchase/vendor-purchase.html -->
+
+<div class="purchase-page-container">
+
+  <!-- TOP BANNER - Full Width -->
+  <div class="purchase-top-banner">
+    <div class="banner-left">
+      <div class="header-badge-icon">
+        <i class="fa-solid fa-cart-plus"></i>
+      </div>
+      <div>
+        <h2>Vendor Purchase</h2>
+      </div>
+    </div>
+    <div class="banner-actions">
+      <button class="btn-export" type="button" (click)="exportData()">
+        <i class="fa-solid fa-download"></i> Export
+      </button>
+      <button class="create-purchase-btn" type="button" (click)="openCreateModal()">
+        <i class="fa-solid fa-plus"></i> New Purchase
+      </button>
+    </div>
+  </div>
+
+  <!-- TWO-COLUMN TOP SECTION -->
+  <div class="two-column-top">
+
+    <!-- LEFT COLUMN: Search & Filters -->
+    <div class="filter-column">
+      <div class="filter-card">
+        <div class="search-wrapper">
+          <i class="fa-solid fa-search search-icon"></i>
+          <input
+            type="text"
+            class="search-input"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="applyFilters()"
+            placeholder="Search by PO #, vendor, client..."
+          >
+          <button class="clear-search" *ngIf="searchQuery" (click)="searchQuery = ''; applyFilters()">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Vendor</label>
+            <select class="filter-select" [(ngModel)]="vendorFilter" (ngModelChange)="applyFilters()">
+              <option value="All">All Vendors</option>
+              <option *ngFor="let vendor of getUniqueVendors()" [value]="vendor">
+                {{ vendor }}
+              </option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Payment Status</label>
+            <select class="filter-select" [(ngModel)]="paymentStatusFilter" (ngModelChange)="applyFilters()">
+              <option value="All">All Status</option>
+              <option value="Pending">⏳ Pending</option>
+              <option value="Partial Paid">💰 Partial Paid</option>
+              <option value="Paid">✅ Paid</option>
+              <option value="Overdue">⚠️ Overdue</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="quick-filters">
+          <span class="quick-filter-label">Quick Filters:</span>
+          <button
+            class="filter-chip"
+            *ngFor="let chip of filterChips"
+            [class.active]="paymentStatusFilter === chip.value"
+            (click)="paymentStatusFilter = chip.value; applyFilters()">
+            {{ chip.icon }} {{ chip.label }}
+          </button>
+          <button
+            class="filter-chip reset-chip"
+            *ngIf="paymentStatusFilter !== 'All' || vendorFilter !== 'All' || searchQuery"
+            (click)="clearAllFilters()">
+            <i class="fa-solid fa-rotate"></i> Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Stats Cards -->
+    <div class="stats-column">
+      <div class="stats-grid">
+        <div class="stat-card total">
+          <div class="stat-icon">
+            <i class="fa-solid fa-receipt"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Purchases</span>
+            <span class="stat-value">{{ purchases.length }}</span>
+          </div>
+        </div>
+
+        <div class="stat-card pending">
+          <div class="stat-icon">
+            <i class="fa-solid fa-clock"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Pending</span>
+            <span class="stat-value">{{ getPendingCount() }}</span>
+          </div>
+        </div>
+
+        <div class="stat-card paid">
+          <div class="stat-icon">
+            <i class="fa-solid fa-check-circle"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Paid</span>
+            <span class="stat-value">{{ getPaidCount() }}</span>
+          </div>
+        </div>
+
+        <div class="stat-card overdue">
+          <div class="stat-icon">
+            <i class="fa-solid fa-exclamation-triangle"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Overdue</span>
+            <span class="stat-value">{{ getOverdueCount() }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FULL-WIDTH MIDDLE SECTION: Purchase Table -->
+  <div class="full-width-table-section">
+    <div class="table-container">
+      <div class="table-header-toolbar">
+        <div class="table-title">
+          <i class="fa-solid fa-list-ul"></i>
+          <span>Purchase Directory</span>
+          <span class="result-count">{{ filteredPurchases.length }} results</span>
+        </div>
+        <div class="table-toolbar-actions">
+          <span class="total-payable">
+            Total Payable: <strong>₨ {{ getTotalPayable() | number }}</strong>
+          </span>
+        </div>
+      </div>
+
+      <!-- Table View -->
+      <div class="table-responsive">
+        <table class="purchase-table">
+          <thead>
+            <tr>
+              <th style="width: 30px;">#</th>
+              <th>PO #</th>
+              <th>Vendor</th>
+              <th>Client</th>
+              <th>Date</th>
+              <th>Due Date</th>
+              <th>Amount (PKR)</th>
+              <th>Commission</th>
+              <th>Status</th>
+              <th style="width: 80px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let item of paginatedPurchases; let i = index"
+              [class.selected]="item.id === selectedPurchase?.id"
+              (click)="selectPurchase(item)">
+              <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+              <td>
+                <div class="po-cell">
+                  <span class="po-number">{{ item.purchaseNumber }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="vendor-cell">
+                  <div class="vendor-avatar">{{ item.vendorName.charAt(0) }}</div>
+                  <span class="vendor-name">{{ item.vendorName }}</span>
+                </div>
+              </td>
+              <td>{{ item.clientName || '—' }}</td>
+              <td>{{ item.purchaseDate | date:'dd MMM yyyy' }}</td>
+              <td>
+                <span [ngClass]="{'text-danger': isOverdue(item)}">
+                  {{ item.dueDate | date:'dd MMM yyyy' }}
+                  <i *ngIf="isOverdue(item)" class="fa-solid fa-exclamation-circle text-danger" style="margin-left: 4px;"></i>
+                </span>
+              </td>
+              <td class="amount-total">₨ {{ item.totalAmount | number }}</td>
+              <td class="amount-commission">₨ {{ item.commissionAmount | number }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="getPaymentStatusClass(item.paymentStatus)">
+                  <span class="status-dot"></span>
+                  {{ item.paymentStatus }}
+                </span>
+              </td>
+              <td>
+                <button class="action-btn" (click)="$event.stopPropagation(); selectPurchase(item)">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+                <button class="action-btn edit-btn" (click)="$event.stopPropagation(); openEditModal(item)">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="paginatedPurchases.length === 0">
+              <td colspan="10" class="empty-state">
+                <i class="fa-solid fa-inbox"></i>
+                <p>No purchases found matching your criteria</p>
+                <button class="clear-filters-btn" (click)="clearAllFilters()">Clear Filters</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="table-footer">
+        <div class="pagination-info">
+          Showing {{ (currentPage - 1) * pageSize + 1 }} -
+          {{ Math.min(currentPage * pageSize, filteredPurchases.length) }}
+          of {{ filteredPurchases.length }} purchases
+        </div>
+        <div class="pagination-controls">
+          <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <button
+            class="page-btn"
+            *ngFor="let p of getPageNumbers()"
+            [class.active]="currentPage === p"
+            (click)="goToPage(p)">
+            {{ p }}
+          </button>
+          <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+        <div class="page-size-selector">
+          <select [(ngModel)]="pageSize" (ngModelChange)="currentPage = 1">
+            <option value="5">5 per page</option>
+            <option value="10">10 per page</option>
+            <option value="25">25 per page</option>
+            <option value="50">50 per page</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FULL-WIDTH BOTTOM SECTION: Purchase Detail Panel -->
+  <div class="full-width-bottom-section" *ngIf="selectedPurchase">
+    <div class="purchase-detail-panel">
+      <div class="detail-header">
+        <div class="detail-title">
+          <i class="fa-solid fa-file-invoice"></i>
+          <h3>Purchase Details: {{ selectedPurchase.purchaseNumber }}</h3>
+        </div>
+        <div class="detail-actions">
+          <button class="btn-payment" (click)="recordPayment(selectedPurchase)">
+            <i class="fa-solid fa-credit-card"></i> Record Payment
+          </button>
+          <button class="btn-print" (click)="printPurchase(selectedPurchase)">
+            <i class="fa-solid fa-print"></i> Print
+          </button>
+          <button class="btn-delete" (click)="deletePurchase()">
+            <i class="fa-solid fa-trash"></i> Delete
+          </button>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <!-- Left Column -->
+        <div class="detail-left">
+          <div class="info-card">
+            <div class="info-card-title">
+              <i class="fa-solid fa-building"></i> Vendor Information
+            </div>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Vendor</span>
+                <span class="info-value">{{ selectedPurchase.vendorName }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Client</span>
+                <span class="info-value">{{ selectedPurchase.clientName || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Purchase Date</span>
+                <span class="info-value">{{ selectedPurchase.purchaseDate | date:'dd MMM yyyy' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Due Date</span>
+                <span class="info-value" [ngClass]="{'text-danger': isOverdue(selectedPurchase)}">
+                  {{ selectedPurchase.dueDate | date:'dd MMM yyyy' }}
+                </span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Payment Terms</span>
+                <span class="info-value">{{ selectedPurchase.paymentTerms }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Status</span>
+                <span class="status-badge" [ngClass]="getPurchaseStatusClass(selectedPurchase.status)">
+                  {{ selectedPurchase.status }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-card" style="margin-top: 12px;">
+            <div class="info-card-title">
+              <i class="fa-solid fa-list-check"></i> Purchase Items
+            </div>
+            <div class="items-table-wrapper">
+              <table class="items-table">
+                <thead>
+                  <tr>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Qty</th>
+                    <th>Unit Price</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of selectedPurchase.items">
+                    <td>{{ item.description }}</td>
+                    <td><span class="service-badge">{{ item.serviceType }}</span></td>
+                    <td>{{ item.quantity }}</td>
+                    <td>₨ {{ item.unitPrice | number }}</td>
+                    <td>₨ {{ item.totalPrice | number }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div *ngIf="selectedPurchase.notes" class="purchase-notes">
+              <strong>Notes:</strong> {{ selectedPurchase.notes }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="detail-right">
+          <div class="info-card financial-summary">
+            <div class="info-card-title">
+              <i class="fa-solid fa-calculator"></i> Financial Summary
+            </div>
+            <div class="financial-grid">
+              <div class="financial-item">
+                <span class="financial-label">Sub Total</span>
+                <span class="financial-value">₨ {{ selectedPurchase.subTotal | number }}</span>
+              </div>
+              <div class="financial-item">
+                <span class="financial-label">Tax ({{ selectedPurchase.taxRate }}%)</span>
+                <span class="financial-value">₨ {{ selectedPurchase.taxAmount | number }}</span>
+              </div>
+              <div class="financial-item" *ngIf="selectedPurchase.discountAmount > 0">
+                <span class="financial-label">Discount</span>
+                <span class="financial-value text-success">-₨ {{ selectedPurchase.discountAmount | number }}</span>
+              </div>
+              <div class="financial-item total-line">
+                <span class="financial-label">Total Amount</span>
+                <span class="financial-value total-amount">₨ {{ selectedPurchase.totalAmount | number }}</span>
+              </div>
+              <div class="financial-item">
+                <span class="financial-label">Commission ({{ selectedPurchase.commissionRate }}%)</span>
+                <span class="financial-value text-success">₨ {{ selectedPurchase.commissionAmount | number }}</span>
+              </div>
+              <div class="financial-item net-line">
+                <span class="financial-label">Net Payable</span>
+                <span class="financial-value net-amount">₨ {{ selectedPurchase.netPayable | number }}</span>
+              </div>
+              <div class="financial-item">
+                <span class="financial-label">Amount Paid</span>
+                <span class="financial-value text-primary">₨ {{ selectedPurchase.amountPaid | number }}</span>
+              </div>
+              <div class="financial-item balance-line">
+                <span class="financial-label">Balance Due</span>
+                <span class="financial-value" [ngClass]="{
+                  'text-success': selectedPurchase.netPayable - selectedPurchase.amountPaid === 0,
+                  'text-danger': selectedPurchase.netPayable - selectedPurchase.amountPaid > 0
+                }">
+                  ₨ {{ selectedPurchase.netPayable - selectedPurchase.amountPaid | number }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-card payment-status-card" style="margin-top: 12px;">
+            <div class="info-card-title">
+              <i class="fa-solid fa-chart-simple"></i> Payment Status
+            </div>
+            <div class="payment-progress">
+              <div class="progress-bar-container">
+                <div class="progress-bar" 
+                     [style.width.%]="getPaymentProgress(selectedPurchase)">
+                </div>
+              </div>
+              <div class="progress-info">
+                <span>Paid: ₨ {{ selectedPurchase.amountPaid | number }}</span>
+                <span>Total: ₨ {{ selectedPurchase.netPayable | number }}</span>
+                <span class="progress-percentage">{{ getPaymentProgress(selectedPurchase) }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== CREATE/EDIT MODAL ==================== -->
+  <div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+
+      <!-- Modal Header -->
+      <div class="modal-header-bar">
+        <div class="modal-header-left">
+          <i class="fa-solid" [ngClass]="isEditMode ? 'fa-pen-to-square' : 'fa-cart-plus'"></i>
+          <h3>{{ isEditMode ? 'Edit Purchase' : 'Create New Purchase' }}</h3>
+        </div>
+        <button class="modal-close-btn" type="button" (click)="closeModal()">&times;</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body-content">
+
+        <!-- Form Grid - Two Columns -->
+        <div class="form-grid-2">
+
+          <!-- Left Column -->
+          <div class="form-column">
+
+            <!-- Purchase Number (Auto-generated) -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-hashtag"></i>
+                PURCHASE NUMBER
+              </label>
+              <input
+                type="text"
+                class="input-ctrl"
+                [value]="activePurchase.purchaseNumber || generatePurchaseNumber()"
+                disabled
+                style="background: #f1f5f9;">
+            </div>
+
+            <!-- Purchase Date -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-calendar-day"></i>
+                PURCHASE DATE *
+              </label>
+              <input
+                type="date"
+                class="input-ctrl"
+                [(ngModel)]="activePurchase.purchaseDate"
+                [value]="activePurchase.purchaseDate | date:'yyyy-MM-dd'">
+            </div>
+
+            <!-- Vendor -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-building"></i>
+                VENDOR *
+              </label>
+              <select class="input-ctrl" [(ngModel)]="activePurchase.vendorId" (ngModelChange)="onVendorChange($event)">
+                <option value="">Select Vendor</option>
+                <option *ngFor="let vendor of vendors" [value]="vendor.id">
+                  {{ vendor.vendorName }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Client -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-user"></i>
+                CLIENT (Optional)
+              </label>
+              <select class="input-ctrl" [(ngModel)]="activePurchase.clientId">
+                <option value="">Select Client</option>
+                <option *ngFor="let client of clients" [value]="client.id">
+                  {{ client.customerName }}
+                </option>
+              </select>
+            </div>
+
+          </div>
+
+          <!-- Right Column -->
+          <div class="form-column">
+
+            <!-- Payment Terms -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-clock"></i>
+                PAYMENT TERMS
+              </label>
+              <input
+                type="text"
+                class="input-ctrl"
+                [(ngModel)]="activePurchase.paymentTerms"
+                placeholder="e.g. Net 30 Days">
+            </div>
+
+            <!-- Due Date -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-calendar-check"></i>
+                DUE DATE
+              </label>
+              <input
+                type="date"
+                class="input-ctrl"
+                [(ngModel)]="activePurchase.dueDate"
+                [value]="activePurchase.dueDate | date:'yyyy-MM-dd'">
+            </div>
+
+            <!-- Commission Rate -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-percent"></i>
+                COMMISSION RATE (%)
+              </label>
+              <input
+                type="number"
+                class="input-ctrl"
+                [(ngModel)]="activePurchase.commissionRate"
+                (ngModelChange)="calculateTotals()"
+                placeholder="0"
+                min="0"
+                max="100">
+            </div>
+
+            <!-- Status -->
+            <div class="form-group">
+              <label>
+                <i class="fa-solid fa-circle"></i>
+                STATUS
+              </label>
+              <select class="input-ctrl" [(ngModel)]="activePurchase.status">
+                <option value="Draft">📝 Draft</option>
+                <option value="Submitted">📤 Submitted</option>
+                <option value="Approved">✅ Approved</option>
+                <option value="Cancelled">❌ Cancelled</option>
+              </select>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Full Width - Purchase Items -->
+        <div class="form-group full-width" style="margin-top: 16px;">
+          <label>
+            <i class="fa-solid fa-list-check"></i>
+            PURCHASE ITEMS
+          </label>
+
+          <div class="items-table-wrapper modal-items">
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th style="width: 35%;">Description</th>
+                  <th style="width: 20%;">Service Type</th>
+                  <th style="width: 10%;">Qty</th>
+                  <th style="width: 15%;">Unit Price</th>
+                  <th style="width: 15%;">Total</th>
+                  <th style="width: 5%;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of activePurchase.items; let i = index">
+                  <td>
+                    <input type="text" class="input-ctrl-sm" [(ngModel)]="item.description" placeholder="Description">
+                  </td>
+                  <td>
+                    <select class="input-ctrl-sm" [(ngModel)]="item.serviceType">
+                      <option value="Hotel">🏨 Hotel</option>
+                      <option value="Airline">✈️ Airline</option>
+                      <option value="Tour">🗺️ Tour</option>
+                      <option value="Visa Agency">📄 Visa</option>
+                      <option value="Transport">🚗 Transport</option>
+                      <option value="Insurance">🎫 Insurance</option>
+                    </select>
+                  </td>
+                  <td>
+                    <input type="number" class="input-ctrl-sm" [(ngModel)]="item.quantity" (ngModelChange)="calculateItemTotal(item)" min="1">
+                  </td>
+                  <td>
+                    <input type="number" class="input-ctrl-sm" [(ngModel)]="item.unitPrice" (ngModelChange)="calculateItemTotal(item)" min="0">
+                  </td>
+                  <td class="item-total">₨ {{ item.totalPrice | number }}</td>
+                  <td>
+                    <button class="remove-item-btn" (click)="removeItem(i)">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr *ngIf="activePurchase.items.length === 0">
+                  <td colspan="6" style="text-align: center; padding: 20px; color: #94a3b8;">
+                    <i class="fa-solid fa-plus-circle" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
+                    Click "Add Item" to add purchase items
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <button class="add-item-btn" type="button" (click)="addItem()">
+            <i class="fa-solid fa-plus"></i> Add Item
+          </button>
+        </div>
+
+        <!-- Financial Summary - Two Columns -->
+        <div class="form-grid-2" style="margin-top: 16px;">
+
+          <!-- Left Column - Summary -->
+          <div class="form-column">
+            <div class="financial-summary-modal">
+              <div class="summary-row">
+                <span>Sub Total</span>
+                <span>₨ {{ activePurchase.subTotal | number }}</span>
+              </div>
+              <div class="summary-row">
+                <span>Tax ({{ activePurchase.taxRate || 0 }}%)</span>
+                <span>₨ {{ activePurchase.taxAmount | number }}</span>
+              </div>
+              <div class="summary-row" *ngIf="activePurchase.discountAmount > 0">
+                <span>Discount</span>
+                <span class="text-success">-₨ {{ activePurchase.discountAmount | number }}</span>
+              </div>
+              <div class="summary-row">
+                <span>Total Amount</span>
+                <span>₨ {{ activePurchase.totalAmount | number }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column - Commission & Net -->
+          <div class="form-column">
+            <div class="financial-summary-modal">
+              <div class="summary-row">
+                <span>Commission ({{ activePurchase.commissionRate || 0 }}%)</span>
+                <span class="text-success">₨ {{ activePurchase.commissionAmount | number }}</span>
+              </div>
+              <div class="summary-row">
+                <span>Net Payable</span>
+                <span class="text-primary" style="font-weight: 700; font-size: 16px;">₨ {{ activePurchase.netPayable | number }}</span>
+              </div>
+              <div class="summary-row">
+                <span>Amount Paid</span>
+                <input type="number" class="input-ctrl-sm" [(ngModel)]="activePurchase.amountPaid" (ngModelChange)="calculateTotals()" placeholder="0" min="0" style="width: 120px;">
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Full Width - Notes -->
+        <div class="form-group full-width" style="margin-top: 16px;">
+          <label>
+            <i class="fa-solid fa-note-sticky"></i>
+            NOTES
+          </label>
+          <textarea class="textarea-ctrl" rows="2" [(ngModel)]="activePurchase.notes" placeholder="Additional notes about this purchase..."></textarea>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer-bar">
+        <button type="button" class="btn-cancel" (click)="closeModal()">
+          <i class="fa-solid fa-times"></i> Cancel
+        </button>
+        <button type="button" class="btn-save" (click)="savePurchase()">
+          <i class="fa-solid" [ngClass]="isEditMode ? 'fa-pen' : 'fa-save'"></i>
+          {{ isEditMode ? 'Update Purchase' : 'Save Purchase' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

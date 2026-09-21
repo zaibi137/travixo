@@ -1,0 +1,525 @@
+<div class="vendor-page-container">
+  
+  <!-- TOP BANNER - Full Width -->
+  <div class="vendor-top-banner">
+    <div class="banner-left">
+      <div class="header-badge-icon">
+        <i class="fa-solid fa-truck-field"></i>
+      </div>
+      <div>
+        <h2>Vendor Management</h2>
+      </div>
+    </div>
+    <div class="banner-actions">
+      <button class="btn-export" type="button">
+        <i class="fa-solid fa-download"></i> Export
+      </button>
+      <button class="create-vendor-btn" type="button" (click)="openCreateModal()">
+        <i class="fa-solid fa-plus"></i> Add New Vendor
+      </button>
+    </div>
+  </div>
+
+  <!-- TWO-COLUMN TOP SECTION -->
+  <div class="two-column-top">
+    
+    <!-- LEFT COLUMN: Search & Filters -->
+    <div class="filter-column">
+      <div class="filter-card">
+        <div class="search-wrapper">
+          <i class="fa-solid fa-search search-icon"></i>
+          <input 
+            type="text" 
+            class="search-input" 
+            [(ngModel)]="searchQuery" 
+            (ngModelChange)="currentPage = 1" 
+            placeholder="Search vendors by name, contact, or email..."
+          >
+          <button class="clear-search" *ngIf="searchQuery" (click)="searchQuery = ''">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </div>
+        
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Category</label>
+            <select class="filter-select" [(ngModel)]="categoryFilter" (ngModelChange)="currentPage = 1">
+              <option value="All">All Categories</option>
+              <option value="Hotel">🏨 Hotels</option>
+              <option value="Airline">✈️ Airlines</option>
+              <option value="Transport">🚗 Transport</option>
+              <option value="Tour Operator">🗺️ Tour Operators</option>
+              <option value="Visa Agency">📄 Visa Agencies</option>
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <label>Status</label>
+            <select class="filter-select" [(ngModel)]="statusFilter" (ngModelChange)="currentPage = 1">
+              <option value="All">All Status</option>
+              <option value="Active">● Active</option>
+              <option value="Inactive">○ Inactive</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="quick-filters">
+          <span class="quick-filter-label">Quick Filters:</span>
+          <button 
+            class="filter-chip" 
+            *ngFor="let chip of filterChips"
+            [class.active]="categoryFilter === chip.value"
+            (click)="categoryFilter = chip.value; currentPage = 1">
+            {{ chip.icon }} {{ chip.label }}
+          </button>
+          <button 
+            class="filter-chip reset-chip" 
+            *ngIf="categoryFilter !== 'All'"
+            (click)="categoryFilter = 'All'; currentPage = 1">
+            <i class="fa-solid fa-rotate"></i> Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Stats Cards -->
+    <div class="stats-column">
+      <div class="stats-grid">
+        <div class="stat-card total">
+          <div class="stat-icon">
+            <i class="fa-solid fa-building"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Vendors</span>
+            <span class="stat-value">{{ vendors.length }}</span>
+          </div>
+        </div>
+        
+        <div class="stat-card active">
+          <div class="stat-icon">
+            <i class="fa-solid fa-check-circle"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Active Vendors</span>
+            <span class="stat-value">{{ getActiveCount() }}</span>
+          </div>
+        </div>
+        
+        <div class="stat-card inactive">
+          <div class="stat-icon">
+            <i class="fa-solid fa-circle-xmark"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Inactive Vendors</span>
+            <span class="stat-value">{{ getInactiveCount() }}</span>
+          </div>
+        </div>
+        
+        <div class="stat-card outstanding">
+          <div class="stat-icon">
+            <i class="fa-solid fa-money-bill-wave"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Outstanding</span>
+            <span class="stat-value">₨ {{ getTotalOutstanding() | number }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <!-- FULL-WIDTH MIDDLE SECTION: Vendor Table -->
+  <div class="full-width-table-section">
+    <div class="table-container">
+      <div class="table-header-toolbar">
+        <div class="table-title">
+          <i class="fa-solid fa-list-ul"></i>
+          <span>Vendor Directory</span>
+          <span class="result-count">{{ filteredVendors.length }} results</span>
+        </div>
+        <div class="table-toolbar-actions">
+          <button class="toolbar-btn" (click)="toggleView()">
+            <i class="fa-solid" [ngClass]="{'fa-table-cells': isGridView, 'fa-table': !isGridView}"></i>
+            {{ isGridView ? 'Grid View' : 'List View' }}
+          </button>
+        </div>
+      </div>
+      
+      <!-- List View -->
+      <div *ngIf="!isGridView" class="table-responsive">
+        <table class="vendor-table">
+          <thead>
+            <tr>
+              <th style="width: 30px;">#</th>
+              <th>Vendor Name</th>
+              <th>Category</th>
+              <th>Contact Person</th>
+              <th>Phone</th>
+              <th>Outstanding (PKR)</th>
+              <th>Status</th>
+              <th style="width: 60px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr 
+              *ngFor="let item of paginatedVendors; let i = index" 
+              [class.selected]="item.id === selectedVendor?.id" 
+              (click)="selectVendor(item)">
+              <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+              <td>
+                <div class="vendor-cell">
+                  <div class="vendor-avatar">
+                    {{ item.vendorName.charAt(0) }}
+                  </div>
+                  <div>
+                    <div class="vendor-name">{{ item.vendorName }}</div>
+                    <div class="vendor-email">{{ item.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="category-badge" [ngClass]="getCategoryClass(item.category)">
+                  {{ getCategoryIcon(item.category) }} {{ item.category }}
+                </span>
+              </td>
+              <td>{{ item.contactPerson }}</td>
+              <td>{{ item.phone }}</td>
+              <td class="amount-payable">{{ item.outstandingBalance | number }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="item.status === 'Active' ? 'status-active' : 'status-inactive'">
+                  <span class="status-dot"></span>
+                  {{ item.status }}
+                </span>
+              </td>
+              <td>
+                <button class="action-btn" (click)="$event.stopPropagation(); selectVendor(item)">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="paginatedVendors.length === 0">
+              <td colspan="8" class="empty-state">
+                <i class="fa-solid fa-inbox"></i>
+                <p>No vendors found matching your criteria</p>
+                <button class="clear-filters-btn" (click)="clearAllFilters()">Clear Filters</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Grid View -->
+      <div *ngIf="isGridView" class="vendor-grid">
+        <div 
+          class="vendor-card" 
+          *ngFor="let item of paginatedVendors"
+          [class.selected]="item.id === selectedVendor?.id"
+          (click)="selectVendor(item)">
+          <div class="card-header">
+            <div class="card-avatar">{{ item.vendorName.charAt(0) }}</div>
+            <span class="card-status" [ngClass]="item.status === 'Active' ? 'status-active' : 'status-inactive'">
+              {{ item.status }}
+            </span>
+          </div>
+          <div class="card-body">
+            <h4>{{ item.vendorName }}</h4>
+            <span class="card-category">{{ getCategoryIcon(item.category) }} {{ item.category }}</span>
+            <div class="card-contact">
+              <p><i class="fa-solid fa-user"></i> {{ item.contactPerson }}</p>
+              <p><i class="fa-solid fa-phone"></i> {{ item.phone }}</p>
+              <p><i class="fa-solid fa-envelope"></i> {{ item.email }}</p>
+            </div>
+            <div class="card-amount">
+              <span>Outstanding</span>
+              <strong>₨ {{ item.outstandingBalance | number }}</strong>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="paginatedVendors.length === 0" class="empty-state-grid">
+          <i class="fa-solid fa-inbox"></i>
+          <p>No vendors found</p>
+        </div>
+      </div>
+      
+      <!-- Pagination -->
+      <div class="table-footer">
+        <div class="pagination-info">
+          Showing {{ (currentPage - 1) * pageSize + 1 }} - 
+          {{ Math.min(currentPage * pageSize, filteredVendors.length) }} 
+          of {{ filteredVendors.length }} vendors
+        </div>
+        <div class="pagination-controls">
+          <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <button 
+            class="page-btn" 
+            *ngFor="let p of getPageNumbers()" 
+            [class.active]="currentPage === p"
+            (click)="goToPage(p)">
+            {{ p }}
+          </button>
+          <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+        <div class="page-size-selector">
+          <select [(ngModel)]="pageSize" (ngModelChange)="currentPage = 1">
+            <option value="5">5 per page</option>
+            <option value="10">10 per page</option>
+            <option value="25">25 per page</option>
+            <option value="50">50 per page</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FULL-WIDTH BOTTOM SECTION: Analytics Cards -->
+<div class="full-width-bottom-section">
+  <div class="analytics-grid">
+    
+    <!-- Top Vendors Card -->
+    <div class="analytics-card top-vendors">
+      <div class="analytics-header">
+        <i class="fa-solid fa-trophy"></i>
+        <span>Top Vendors by Spending</span>
+      </div>
+      <div class="analytics-body">
+        <div *ngFor="let vendor of getTopVendors(5); let i = index" class="analytics-item">
+          <span class="item-name">{{ vendor.vendorName }}</span>
+          <div class="item-bar">
+            <div class="bar-fill" [style.width.%]="getPercentage(vendor.outstandingBalance, getMaxBalance())"></div>
+          </div>
+          <span class="item-amount">₨ {{ vendor.outstandingBalance | number }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Recent Activity Card -->
+    <div class="analytics-card recent-purchases">
+      <div class="analytics-header">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <span>Recent Activity</span>
+      </div>
+      <div class="analytics-body">
+        <div class="activity-item" *ngFor="let activity of getRecentActivities(); let i = index">
+          <div class="activity-icon" [ngClass]="activity.type">
+            <i class="fa-solid" [ngClass]="activity.icon"></i>
+          </div>
+          <div class="activity-content">
+            <div class="activity-text">{{ activity.text }}</div>
+            <div class="activity-time">{{ activity.time }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Payment Summary Card -->
+    <div class="analytics-card payment-summary">
+      <div class="analytics-header">
+        <i class="fa-solid fa-chart-pie"></i>
+        <span>Payment Summary</span>
+      </div>
+      <div class="analytics-body">
+        <div class="payment-stats">
+          <div class="payment-stat">
+            <span class="stat-label">Total Payable</span>
+            <span class="stat-value">₨ {{ getTotalOutstanding() | number }}</span>
+          </div>
+          <div class="payment-stat">
+            <span class="stat-label">Average Balance</span>
+            <span class="stat-value">₨ {{ getAverageBalance() | number }}</span>
+          </div>
+          <div class="payment-stat">
+            <span class="stat-label">Highest Payable</span>
+            <span class="stat-value">₨ {{ getMaxBalance() | number }}</span>
+          </div>
+        </div>
+        <div class="payment-chart">
+          <div class="mini-chart">
+            <div 
+              class="chart-bar" 
+              *ngFor="let vendor of getTopVendors(5); let i = index" 
+              [style.height.%]="getPercentage(vendor.outstandingBalance, getMaxBalance())"
+              [style.background]="getBarColor(i)">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+  <!-- ADD / EDIT MODAL -->
+<div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="modal-header-bar">
+      <div class="modal-header-left">
+        <i class="fa-solid" [ngClass]="isEditMode ? 'fa-pen-to-square' : 'fa-user-plus'"></i>
+        <h3>{{ isEditMode ? 'Edit Vendor Profile' : 'Add New Vendor' }}</h3>
+      </div>
+      <button class="modal-close-btn" type="button" (click)="closeModal()">&times;</button>
+    </div>
+    
+    <!-- Modal Body -->
+    <div class="modal-body-content">
+      
+      <!-- Two Column Form Grid -->
+      <div class="form-grid-2">
+        
+        <!-- Left Column -->
+        <div class="form-column">
+          
+          <!-- Vendor Name -->
+          <div class="form-group">
+            <label>
+              <i class="fa-solid fa-building"></i>
+              VENDOR NAME
+            </label>
+            <input 
+              type="text" 
+              class="input-ctrl" 
+              [(ngModel)]="activeVendor.vendorName" 
+              placeholder="e.g. Opal Haven Hotel"
+              required>
+          </div>
+          
+          <!-- Category -->
+          <div class="form-group">
+            <label>
+              <i class="fa-solid fa-tags"></i>
+              CATEGORY
+            </label>
+            <select class="input-ctrl" [(ngModel)]="activeVendor.category">
+              <option value="Hotel">🏨 Hotel</option>
+              <option value="Airline">✈️ Airline</option>
+              <option value="Transport">🚗 Transport</option>
+              <option value="Tour Operator">🗺️ Tour Operator</option>
+              <option value="Visa Agency">📄 Visa Agency</option>
+            </select>
+          </div>
+          
+          <!-- Contact Person -->
+          <div class="form-group">
+            <label>
+              <i class="fa-solid fa-user"></i>
+              CONTACT PERSON
+            </label>
+            <input 
+              type="text" 
+              class="input-ctrl" 
+              [(ngModel)]="activeVendor.contactPerson" 
+              placeholder="Manager or representative name"
+              required>
+          </div>
+          
+          <!-- Phone Number -->
+          <div class="form-group">
+            <label>
+              <i class="fa-solid fa-phone"></i>
+              PHONE NUMBER
+            </label>
+            <input 
+              type="text" 
+              class="input-ctrl" 
+              [(ngModel)]="activeVendor.phone" 
+              placeholder="+92 300 1234567"
+              required>
+          </div>
+          
+        </div>
+        
+        <!-- Right Column -->
+        <div class="form-column">
+          
+          <!-- Email Address -->
+          <div class="form-group">
+            <label>
+              <i class="fa-solid fa-envelope"></i>
+              EMAIL ADDRESS
+            </label>
+            <input 
+              type="email" 
+              class="input-ctrl" 
+              [(ngModel)]="activeVendor.email" 
+              placeholder="vendor@domain.com"
+              required>
+          </div>
+          
+          <!-- Payment Terms -->
+          <div class="form-group">
+            <label>
+              <i class="fa-solid fa-clock"></i>
+              PAYMENT TERMS
+            </label>
+            <input 
+              type="text" 
+              class="input-ctrl" 
+              [(ngModel)]="activeVendor.paymentTerms" 
+              placeholder="e.g. Net 30 Days, Advance">
+          </div>
+          
+          <!-- Outstanding Payable -->
+          <div class="form-group">
+            <label>
+              <i class="fa-solid fa-money-bill-wave"></i>
+              OUTSTANDING PAYABLE (PKR)
+            </label>
+            <input 
+              type="number" 
+              class="input-ctrl" 
+              [(ngModel)]="activeVendor.outstandingBalance" 
+              placeholder="0"
+              min="0">
+          </div>
+          
+          <!-- Status -->
+          <div class="form-group">
+            <label>
+              <i class="fa-solid fa-circle"></i>
+              STATUS
+            </label>
+            <select class="input-ctrl" [(ngModel)]="activeVendor.status">
+              <option value="Active">✅ Active</option>
+              <option value="Inactive">❌ Inactive</option>
+            </select>
+          </div>
+          
+        </div>
+        
+      </div>
+      
+      <!-- Full Width - Address -->
+      <div class="form-group full-width" style="margin-top: 16px;">
+        <label>
+          <i class="fa-solid fa-location-dot"></i>
+          OFFICE ADDRESS
+        </label>
+        <textarea 
+          class="textarea-ctrl" 
+          rows="2" 
+          [(ngModel)]="activeVendor.address" 
+          placeholder="Complete physical address..."></textarea>
+      </div>
+      
+    </div>
+    
+    <!-- Modal Footer -->
+    <div class="modal-footer-bar">
+      <button type="button" class="btn-cancel" (click)="closeModal()">
+        <i class="fa-solid fa-times"></i> Cancel
+      </button>
+      <button type="button" class="btn-save" (click)="saveVendorData()">
+        <i class="fa-solid" [ngClass]="isEditMode ? 'fa-pen' : 'fa-save'"></i>
+        {{ isEditMode ? 'Update Vendor' : 'Save Vendor' }}
+      </button>
+    </div>
+    
+  </div>
+</div>
+</div>
