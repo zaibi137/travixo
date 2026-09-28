@@ -41,6 +41,12 @@
         <p class="success-message" *ngIf="resetMessage()">{{ resetMessage() }}</p>
         <p class="error-message" *ngIf="errorMessage()">{{ errorMessage() }}</p>
 
+        <!-- Demo hint -->
+        <div class="demo-hint">
+          <p><strong>🎯 Demo Access</strong></p>
+          <p>Email pre-filled. Enter <em>any</em> password (e.g. <code>demo1234</code>) and click Login.</p>
+        </div>
+
         <button type="submit" [disabled]="isLoading()">
           <i class="fa-solid" [ngClass]="isLoading() ? 'fa-spinner' : 'fa-right-to-bracket'"></i>
           {{ isLoading() ? 'Logging in...' : 'Login' }}

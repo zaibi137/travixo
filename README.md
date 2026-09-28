@@ -7,6 +7,14 @@ A modern travel platform built with Angular that helps users search, compare, an
 ![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 
 ---
+## 🌐 Live Demo
+
+**URL:** https://travixo-5191-8svpwjfed-zaibi137s-projects.vercel.app
+
+**How to log in:**
+- The email field is **pre-filled** with `demo@travixo.com`.
+- Enter **any password** (e.g. `demo1234`) and click **Login**.
+- The demo runs entirely in the browser using mock authentication — no real data is stored or sent anywhere.
 
 ## 📸 Screenshots
 

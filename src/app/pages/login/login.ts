@@ -17,7 +17,8 @@ export class LoginComponent {
   view = signal<LoginView>('login');
 
   // ---------- Login ----------
-  userId = signal(''); // this is now the email
+  // Pre-filled demo email so visitors can try instantly
+  userId = signal('demo@travixo.com');
   password = signal('');
   showPassword = signal(false);
   errorMessage = signal('');
@@ -107,7 +108,6 @@ export class LoginComponent {
     this.errorMessage.set('');
     this.resetMessage.set('');
 
-    // Pre-fill resetUserCode from login userId if available
     if (nextView === 'forgotPassword' && !this.resetUserCode() && this.userId()) {
       this.resetUserCode.set(this.userId());
     }
@@ -128,7 +128,7 @@ export class LoginComponent {
     this.confirmPassword.set('');
     this.showPassword.set(false);
     this.showNewPassword.set(false);
-    this.showConfirmPassword.set(false);  
+    this.showConfirmPassword.set(false);
   }
 
   private isValidEmail(email: string): boolean {

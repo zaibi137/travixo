@@ -287,3 +287,43 @@
   margin-top: -4px;
   margin-bottom: 10px;
 }
+
+/* ===== Demo hint ===== */
+.demo-hint {
+  margin: 4px 0 -4px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.14);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.demo-hint p {
+  margin: 0.2rem 0;
+  color: #e2e8f0;
+  font-size: 13px;
+}
+
+.demo-hint strong {
+  color: #90cdf4;
+  font-size: 13.5px;
+  letter-spacing: 0.3px;
+}
+
+.demo-hint em {
+  color: #ffffff;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.demo-hint code {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #90cdf4;
+  font-family: 'Courier New', monospace;
+  font-size: 12.5px;
+  font-weight: 700;
+}
