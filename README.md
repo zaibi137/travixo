@@ -11,10 +11,16 @@ A modern travel platform built with Angular that helps users search, compare, an
 
 **URL:** https://travixo-5191-8svpwjfed-zaibi137s-projects.vercel.app
 
-**How to log in:**
-- The email field is **pre-filled** with `demo@travixo.com`.
-- Enter **any password** (e.g. `demo1234`) and click **Login**.
-- The demo runs entirely in the browser using mock authentication — no real data is stored or sent anywhere.
+### Demo Credentials
+
+| Field    | Value              |
+|----------|--------------------|
+| Email    | `demo@travixo.com` |
+| Password | `demo1234`         |
+
+The login form is pre-filled with these credentials — just click **Login**.
+
+> ⚠️ **Note:** This is a portfolio demo. Authentication is mocked in the frontend (no real backend). The demo credentials above are the only ones accepted.
 
 ## 📸 Screenshots
 

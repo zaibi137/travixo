@@ -17,9 +17,9 @@ export class LoginComponent {
   view = signal<LoginView>('login');
 
   // ---------- Login ----------
-  // Pre-filled demo email so visitors can try instantly
+  // Pre-filled demo credentials so visitors can try instantly
   userId = signal('demo@travixo.com');
-  password = signal('');
+  password = signal('demo1234');
   showPassword = signal(false);
   errorMessage = signal('');
   isLoading = signal(false);
@@ -50,7 +50,6 @@ export class LoginComponent {
     }
   }
 
-  // Visibility Toggle Methods
   togglePasswordVisibility(): void {
     this.showPassword.set(!this.showPassword());
   }
@@ -63,7 +62,6 @@ export class LoginComponent {
     this.showConfirmPassword.set(!this.showConfirmPassword());
   }
 
-  // Helper getter to ensure User Code is never empty if typed on login page
   private getEffectiveUserCode(): string {
     return (this.resetUserCode().trim() || this.userId().trim());
   }
@@ -101,7 +99,6 @@ export class LoginComponent {
     });
   }
 
-  // ---------- View switching ----------
   toggleForgotPassword(): void {
     const nextView = this.view() === 'forgotPassword' ? 'login' : 'forgotPassword';
     this.view.set(nextView);
@@ -137,7 +134,6 @@ export class LoginComponent {
     return re.test(email.trim());
   }
 
-  // ---------- Step 1: request OTP by email ----------
   submitForgotPassword(): void {
     const email = this.resetEmail().trim();
     const userCode = this.getEffectiveUserCode();
@@ -205,7 +201,6 @@ export class LoginComponent {
     });
   }
 
-  // ---------- OTP box handling ----------
   trackByIndex(index: number): number {
     return index;
   }
@@ -244,7 +239,6 @@ export class LoginComponent {
     this.otpDigits.set(current);
   }
 
-  // ---------- Step 2: Verify OTP ----------
   verifyOtp(): void {
     const userCode = this.getEffectiveUserCode();
 
@@ -277,7 +271,6 @@ export class LoginComponent {
     });
   }
 
-  // ---------- Step 3: Set New Password ----------
   submitResetPassword(): void {
     const userCode = this.getEffectiveUserCode();
 

@@ -42,10 +42,13 @@
         <p class="error-message" *ngIf="errorMessage()">{{ errorMessage() }}</p>
 
         <!-- Demo hint -->
-        <div class="demo-hint">
-          <p><strong>🎯 Demo Access</strong></p>
-          <p>Email pre-filled. Enter <em>any</em> password (e.g. <code>demo1234</code>) and click Login.</p>
-        </div>
+        <!-- Demo credentials hint -->
+<div class="demo-hint">
+  <p><strong>🎯 Demo Access</strong></p>
+  <p>Email: <code>demo&#64;travixo.com</code></p>
+  <p>Password: <code>demo1234</code></p>
+  <p class="demo-hint-sub">Already pre-filled — just click <em>Login</em>.</p>
+</div>
 
         <button type="submit" [disabled]="isLoading()">
           <i class="fa-solid" [ngClass]="isLoading() ? 'fa-spinner' : 'fa-right-to-bracket'"></i>
